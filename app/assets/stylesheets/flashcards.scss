@@ -1,0 +1,40 @@
+// Place all the styles related to the flashcards controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+$pink: #FA0E6A;
+
+body {
+  background: #EFEFEF;
+}
+
+.flashcard {
+  padding: 40px;
+  background: #FFF;
+  text-align: center;
+  width: 450px;
+  margin: 20px auto;
+
+  img {
+    margin: 30px;
+    width: 300px;
+    height: 300px;
+  }
+}
+
+.flashcard-container {
+  text-align: center;
+}
+
+.more-info {
+  display: none;
+}
+
+.recollection-buttons {
+  margin-top: 20px;
+
+  form {
+    display: inline;
+    margin: 3px;
+  }
+}

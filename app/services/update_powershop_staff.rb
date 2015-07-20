@@ -1,0 +1,72 @@
+require 'pp'
+require 'httparty'
+
+class UpdatePowershopStaff
+  include HTTParty
+
+  base_uri "https://powershopwinky.papyrs.com/api/v1"
+
+  def call
+    unless ENV['WINKY_AUTH_TOKEN']
+      raise 'Please set WINKY_AUTH_TOKEN'
+    end
+
+    people_with_pictures_in_wellington.each do |person|
+      staff_member = StaffMember.find_or_initialize_by(name: person.name)
+
+      staff_member.update_attributes!(
+        :bio => person.bio,
+        :image_url => person.image_url,
+        :position => person.position,
+        :city => person.city
+      )
+    end
+  end
+
+  def people_with_pictures_in_wellington
+    JSON.parse(self.class.get(people_url).body)
+      .map { |person| Staff.from_json(person) }
+      .select(&:has_profile_picture?)
+      .select(&:in_wellington?)
+  end
+
+  private
+
+  def auth_token
+    ENV['WINKY_AUTH_TOKEN']
+  end
+
+  def people_url
+    "/people/all/?auth_token=#{auth_token}"
+  end
+end
+
+class Staff
+  def self.from_json(json)
+    new(
+      name: json["attributes"]["Name"],
+      image_url: json["avatar_large"],
+      position: json["attributes"]["Position"],
+      bio: json["attributes"]["Bio"],
+      city: json["attributes"]["Group"],
+    )
+  end
+
+  attr_reader :name, :image_url, :position, :bio, :city
+
+  def initialize(name:, image_url:, position:, bio:, city:)
+    @name = name
+    @image_url = image_url
+    @position = position
+    @bio = bio
+    @city = city
+  end
+
+  def has_profile_picture?
+    !@image_url.include? "default"
+  end
+
+  def in_wellington?
+    @city == "Wellington"
+  end
+end

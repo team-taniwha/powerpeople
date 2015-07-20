@@ -1,0 +1,20 @@
+<div class="flashcard">
+  <div>
+    <%= image_tag(flashcard.staff_member.image_url) %>
+  </div>
+
+  <button class="show-more-info">Show</button>
+
+  <div class="more-info">
+    <h2><%= flashcard.staff_member.name %></h2>
+    <p><%= flashcard.staff_member.bio %></p>
+    <p><%= flashcard.staff_member.position %></p>
+
+    <div class="recollection-buttons">
+      <%= flashcard_response_button(flashcard, 'Who?', 2) %>
+      <%= flashcard_response_button(flashcard, "Oh yeah, that's right", 3) %>
+      <%= flashcard_response_button(flashcard, "I know who that is", 4) %>
+      <%= flashcard_response_button(flashcard, "Easy!", 5) %>
+    </div>
+  </div>
+</div>
