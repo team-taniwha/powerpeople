@@ -8,6 +8,15 @@ Bundler.require(*Rails.groups)
 
 module People
   class Application < Rails::Application
+
+    SimpleGoogleAuth.configure do |config|
+      config.client_id = ENV.fetch('PEOPLE_CLIENT_ID')
+      config.client_secret = ENV.fetch('PEOPLE_CLIENT_SECRET')
+      config.redirect_uri = "http://people.dev/google-callback"
+      config.authenticate = lambda do |data|
+        data.email.ends_with?("@powershop.co.nz")
+      end
+    end
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.

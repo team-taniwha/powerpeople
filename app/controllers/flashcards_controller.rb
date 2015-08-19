@@ -9,7 +9,9 @@ class FlashcardsController < ApplicationController
 
     flashcard.review(params[:recollection_quality].to_i)
 
-    flashcard.save!
+    if (1..3).include? params[:recollection_quality].to_i
+      flashcard.update_attributes!(:due => Date.tomorrow)
+    end
 
     redirect_to :action => :index
   end

@@ -27,6 +27,8 @@ gem 'httparty'
 
 gem 'normalize-rails'
 
+gem 'simple_google_auth'
+
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 
