@@ -16,8 +16,13 @@ class UpdatePowershopStaff
   private
 
   def update_or_create_staff_member(person)
-    existing_staff_member = StaffMember.find_by(name: person.name)
     staff_member = StaffMember.find_or_initialize_by(name: person.name)
+
+    if staff_member.new_record?
+      CreateFlashcardsForNewStaffMember.new(
+        staff_member: staff_member
+      ).call
+    end
 
     staff_member.update_attributes!(
       :bio => person.bio,

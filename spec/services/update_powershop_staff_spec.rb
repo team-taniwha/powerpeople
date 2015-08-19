@@ -1,15 +1,17 @@
 require 'rails_helper'
 
 describe UpdatePowershopStaff do
-  it 'adds missing staff members' do
-    person = OpenStruct.new(
+  let(:person) do
+    OpenStruct.new(
       name: 'Test',
       bio: 'Magnificent',
       image_url: 'http://example.org/fake.png',
       position: 'Test Person',
       city: 'Wellington'
     )
+  end
 
+  it 'adds missing staff members' do
     UpdatePowershopStaff.new(people: [person]).call
 
     staff_member = StaffMember.last
@@ -21,5 +23,13 @@ describe UpdatePowershopStaff do
   end
 
   it 'requests that flashcards are made for new staff' do
+    service_stub = double(:service)
+
+    expect(CreateFlashcardsForNewStaffMember).to receive(:new)
+      .and_return(service_stub)
+
+    expect(service_stub).to receive(:call)
+
+    UpdatePowershopStaff.new(people: [person]).call
   end
 end
