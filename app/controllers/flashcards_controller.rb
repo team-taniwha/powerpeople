@@ -1,6 +1,10 @@
 class FlashcardsController < ApplicationController
   def index
-    @flashcards = User.first.flashcards.select(&:due_today?)
+    if current_user.flashcards.count < StaffMember.count
+      MakeFlashcards.for(current_user).call
+    end
+
+    @flashcards = current_user.flashcards.select(&:due_today?)
       .sort_by { |flashcard| flashcard.due || Time.now }
   end
 
@@ -14,5 +18,11 @@ class FlashcardsController < ApplicationController
     end
 
     redirect_to :action => :index
+  end
+
+  def current_user
+    @current_user ||= User.where(
+      email: google_auth_data.email
+    ).first_or_create!
   end
 end
