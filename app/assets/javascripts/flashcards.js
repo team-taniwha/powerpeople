@@ -1,7 +1,7 @@
 /* globals $ */
 
 const Cycle = require('@cycle/core');
-const {makeDOMDriver} = require('@cycle/dom');
+const {h, makeDOMDriver} = require('@cycle/dom');
 const _ = require('lodash');
 
 const renderFlashcard = require('./views/flashcard');
@@ -11,8 +11,21 @@ const sendGuessesToServer = require('./server/guesses');
 function log (label) { return (thing) => { console.log(label, thing); return thing; }; }
 
 function view ({state$}) {
-  return state$.map(log('state')).map(({state, flashcard, guessResult, guessScore, guessInputValue}) => (
-    renderFlashcard(flashcard, state === 'madeGuess', guessResult, guessScore.score, guessInputValue)
+  return (
+    state$.map(log('state')).map(({state, flashcards, guessResult, guessScore, guessInputValue}) => (
+      h('div.flashcards', [
+        flashcards.map((flashcard, index) => (
+          renderFlashcard(
+            flashcard,
+            index,
+            state === 'madeGuess' || index === 0,
+            guessResult,
+            guessScore.score,
+            guessInputValue
+          ))
+        )
+      ])
+    )
   ));
 }
 
@@ -38,18 +51,24 @@ function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$}) {
   const stateMadeGuess$ = state$.filter(state => state === 'madeGuess');
 
   const flashcard$ = Cycle.Rx.Observable.from(window.flashcards)
-    .concat(Cycle.Rx.Observable.never())
-    .zip(stateReadyToGuess$, (flashcard, _) => flashcard)
-    .map(log('flashcard'));
+    .concat(Cycle.Rx.Observable.never());
+
+  const flashcards$ = Cycle.Rx.Observable.zip(
+    flashcard$,
+    flashcard$.skip(1),
+    flashcard$.skip(2)
+   ).zip(stateReadyToGuess$, (flashcards, _) => flashcards)
+    .startWith([{}, {}, {}])
+    .map(log('zipped flashcards'));
 
   const guess$ = stateMadeGuess$
     .withLatestFrom(guessValue$, (_, guess) => ({name: guess}))
     .map(log('guess'));
 
-  const guessScore$ = guess$.withLatestFrom(flashcard$, (guess, flashcard) => {
+  const guessScore$ = guess$.withLatestFrom(flashcards$, (guess, flashcards) => {
     return {
-      flashcardId: flashcard.id,
-      score: calculateGuessScore(guess.name, flashcard.staff_member.name)
+      flashcardId: flashcards[1].id,
+      score: calculateGuessScore(guess.name, flashcards[1].staff_member.name)
     };
   });
 
@@ -59,10 +78,10 @@ function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$}) {
     state$: state$.withLatestFrom(
       guess$,
       guessScore$,
-      flashcard$,
+      flashcards$,
       stateReadyToGuess$.map(_ => ''),
-      (state, guessResult, guessScore, flashcard, guessInputValue) => ({state, guessResult, guessScore, flashcard, guessInputValue})
-    ).map(log('modelState')).startWith({state: 'readyToGuess', flashcard: window.flashcards[0], guessScore: {name: 'fgsfdg'}, guessResult: {score: 3}})
+      (state, guessResult, guessScore, flashcards, guessInputValue) => ({state, guessResult, guessScore, flashcards, guessInputValue})
+    ).map(log('modelState')).startWith({state: 'readyToGuess', flashcards: [window.flashcards[0], window.flashcards[1], window.flashcards[2]], guessScore: {name: 'fgsfdg'}, guessResult: {score: 3}})
   };
 }
 
