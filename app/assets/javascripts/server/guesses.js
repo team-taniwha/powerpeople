@@ -2,7 +2,7 @@
 
 function updateServer (payload) {
   $.ajax({
-    url: `/flashcards/${payload.flashCardId}`,
+    url: `/flashcards/${payload.flashcardId}`,
     method: 'POST',
     dataType: 'JSON',
     data: {recollection_quality: payload.score, _method: 'PUT'}

@@ -2,6 +2,7 @@
 
 const Cycle = require('@cycle/core');
 const {makeDOMDriver} = require('@cycle/dom');
+const _ = require('lodash');
 
 const renderFlashcard = require('./views/flashcard');
 const calculateGuessScore = require('./calculations/guess-score');
@@ -10,49 +11,70 @@ const sendGuessesToServer = require('./server/guesses');
 function log (label) { return (thing) => { console.log(label, thing); return thing; }; }
 
 function view ({state$}) {
-  return state$.map(log('state')).map(([flashcard, showMoreInformation, guessResult]) => (
-    renderFlashcard(flashcard, showMoreInformation, guessResult, calculateGuessScore(flashcard.staff_member.name, guessResult.name))
+  return state$.map(log('state')).map(({state, flashcard, guessResult, guessScore}) => (
+    renderFlashcard(flashcard, state === 'madeGuess', guessResult, guessScore.score)
   ));
 }
 
-function model ({guess$, nextFlashcard$}) {
+function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$}) {
+  const states = [
+    'readyToGuess',
+    'madeGuess'
+  ];
+
+  const progressState$ = Cycle.Rx.Observable.merge(
+    guessButton$.map(_ => 'guessClick'),
+    nextFlashcard$.map(_ => 'nextClick'),
+    enterKey$.map(_ => 'enter')
+  ).map(log('progress'));
+
+  const state$ = progressState$.scan((currentState, __) => {
+    const currentStateIndex = _.findIndex(states, state => state === currentState);
+
+    return states[(currentStateIndex + 1) % states.length];
+  }, 'readyToGuess').startWith('readyToGuess').map(log('currentState'));
+
   const flashcard$ = Cycle.Rx.Observable.from(window.flashcards)
-    .concat(Cycle.Rx.Observable.never());
+    .concat(Cycle.Rx.Observable.never())
+    .zip(state$.filter(state => state === 'readyToGuess'), (flashcard, _) => flashcard)
+    .map(log('flashcard'));
 
-  const showMoreInformation$ = Cycle.Rx.Observable.merge(
-    guess$.map(log('guess')).map(_ => true),
-    nextFlashcard$.map(_ => false)
-  ).map(log('showMoreInformation'));
+  const guess$ = state$.filter(state => state === 'madeGuess')
+    .withLatestFrom(guessValue$, (_, guess) => ({name: guess}))
+    .map(log('guess'));
 
-  const state$ = Cycle.Rx.Observable.combineLatest(
-    Cycle.Rx.Observable.zip(flashcard$, nextFlashcard$, (f, _) => f),
-    showMoreInformation$,
-    guess$
-  ).map(log('zippedFlashcards'));
-
-  const guessScore$ = guess$.withLatestFrom(state$, (guess, [flashCard, _, __]) => {
+  const guessScore$ = guess$.withLatestFrom(flashcard$, (guess, flashcard) => {
     return {
-      flashCardId: flashCard.id,
-      score: calculateGuessScore(guess.name, flashCard.staff_member.name)
+      flashcardId: flashcard.id,
+      score: calculateGuessScore(guess.name, flashcard.staff_member.name)
     };
   });
 
-  sendGuessesToServer(guessScore$);
+  sendGuessesToServer(guessScore$.map(log('submittedScore')));
 
   return {
-    state$
+    state$: state$.withLatestFrom(
+      guess$,
+      guessScore$,
+      flashcard$,
+      (state, guessResult, guessScore, flashcard) => ({state, guessResult, guessScore, flashcard})
+    ).map(log('modelState')).startWith({state: 'readyToGuess', flashcard: window.flashcards[0], guessScore: {name: 'fgsfdg'}, guessResult: {score: 3}})
   };
 }
 
+function keyPressed (key) {
+  return (ev) => ev.key === key;
+}
+
 function intent (DOM) {
-  const guessValue$ = DOM.get('.guess', 'change').map(e => e.target.value).startWith('');
+  const keyPress$ = Cycle.Rx.Observable.fromEvent(document, 'keypress');
 
   return {
-    guess$: DOM.get('.makeGuess', 'click')
-      .startWith({name: 'nah'})
-      .withLatestFrom(guessValue$, (guess, guessValue) => ({name: guessValue})),
+    guessValue$: DOM.get('.guess', 'input').map(e => e.target.value).startWith(''),
+    guessButton$: DOM.get('.makeGuess', 'click'),
+    nextFlashcard$: DOM.get('.proceed', 'click'),
 
-    nextFlashcard$: DOM.get('.proceed', 'click').startWith(null)
+    enterKey$: keyPress$.filter(keyPressed('Enter'))
   };
 }
 
