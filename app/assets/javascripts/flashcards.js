@@ -99,11 +99,11 @@ function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$}) {
 }
 
 function keyPressed (key) {
-  return (ev) => ev.key === key;
+  return (ev) => ev.key === key || ev.keyIdentifier === key;
 }
 
 function intent (DOM) {
-  const keyPress$ = Cycle.Rx.Observable.fromEvent(document, 'keypress').map(log('keypress'));
+  const keyPress$ = Cycle.Rx.Observable.fromEvent(document.body, 'keypress').map(log('keypress'));
 
   return {
     guessValue$: DOM.get('.guess', 'input').map(e => e.target.value).startWith(''),

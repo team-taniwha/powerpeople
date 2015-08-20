@@ -32,22 +32,20 @@ function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessResult
 
 function renderFlashcard (flashcard, index, showMoreInformation, guessResult, guessScore, guessValue) {
   return (
-    h('.flashcard', {key: flashcard.id}, [
-      h(`.container.position-${index}`, [
-        h('img', {attributes: {src: flashcard.staff_member.image_url}}),
+    h(`.flashcard.position-${index}`, {key: flashcard.id}, [
+      h('img', {attributes: {src: flashcard.staff_member.image_url}}),
 
-        h('div', {attributes: displayIf(!showMoreInformation)}, [
-          h('div', [
-            h('input.guess', {type: 'text', value: guessValue})
-          ]),
-
-          h('div', [
-            h('button.makeGuess', 'Guess')
-          ])
+      h('div', {attributes: displayIf(!showMoreInformation)}, [
+        h('div', [
+          h('input.guess', {type: 'text', value: guessValue})
         ]),
 
-        displayMoreInfoIfGuessed(flashcard.staff_member, showMoreInformation, guessResult, guessScore)
-      ])
+        h('div', [
+          h('button.makeGuess', 'Guess')
+        ])
+      ]),
+
+      displayMoreInfoIfGuessed(flashcard.staff_member, showMoreInformation, guessResult, guessScore)
     ])
   );
 }
