@@ -65,10 +65,34 @@ body {
   }
 }
 
-.guess {
+.name {
   text-align: center;
   font-size: 2em;
-  width: 300px;
   padding: 2px;
   margin-bottom: 15px;
+}
+
+.score-1 {
+  color: darken($pink, 40%);
+}
+
+.score-2 {
+  color: darken($pink, 30%);
+}
+
+.score-3 {
+  color: darken($pink, 20%);
+}
+
+.score-4 {
+  color: darken($pink, 10%);
+}
+
+.score-5 {
+  color: darken($pink, 0%);
+}
+
+.guess {
+  width: 300px;
+  margin-top: -2px;
 }
