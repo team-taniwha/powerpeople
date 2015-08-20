@@ -3,27 +3,13 @@
 const Cycle = require('@cycle/core');
 const {h, makeDOMDriver} = require('@cycle/dom');
 
-function log (label) { return (thing) => { console.log(label, thing); return thing; };}
+const renderFlashcard = require('./views/flashcard');
 
-function displayMoreInfoIfGuessed (staffMember, hasGuessed) {
-  return (
-    h('.more-info', {attributes: {style: `display: ${hasGuessed ? 'block' : 'none'}`}}, [
-      h('h2', staffMember.name),
-      h('h3', staffMember.position),
-      h('p', staffMember.bio),
-      h('button.proceed', 'Next')
-    ])
-  );
-}
+function log (label) { return (thing) => { console.log(label, thing); return thing; };}
 
 function view ({state$}) {
   return state$.map(log('state')).map(({flashcard, showMoreInformation}) => (
-    h('.flashcard', [
-      h('img', {attributes: {src: flashcard.staff_member.image_url}}),
-      h('input'),
-      h('button.guess', 'Guess'),
-      displayMoreInfoIfGuessed(flashcard.staff_member, showMoreInformation)
-    ])
+    renderFlashcard(flashcard, showMoreInformation)
   ));
 }
 
