@@ -1,6 +1,6 @@
 class UpdatePowershopStaff
   def self.from_winkyworld
-    new(people: GetPeopleFromWinkyworld.new.call)
+    new(people: GetPeopleFromWinkyworld.new.call).call
   end
 
   def initialize(people:)
@@ -19,6 +19,8 @@ class UpdatePowershopStaff
     staff_member = StaffMember.find_or_initialize_by(name: person.name)
 
     if staff_member.new_record?
+      staff_member.save!
+
       CreateFlashcardsForNewStaffMember.new(
         staff_member: staff_member
       ).call
