@@ -21,10 +21,10 @@ function displayIf (bool) {
 function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessResult, guessScore) {
   return (
     h('.more-info', {attributes: displayIf(showMoreInformation)}, [
-      h('p', guessMessage(guessScore)),
       h('h2', staffMember.name),
       h('h3', staffMember.position),
       h('p', staffMember.bio),
+      h('p', guessMessage(guessScore)),
       h('button.proceed', 'Next')
     ])
   );
@@ -36,8 +36,13 @@ function renderFlashcard (flashcard, showMoreInformation, guessResult, guessScor
       h('img', {attributes: {src: flashcard.staff_member.image_url}}),
 
       h('div', {attributes: displayIf(!showMoreInformation)}, [
-        h('input.guess', {value: guessValue}),
-        h('button.makeGuess', 'Guess')
+        h('div', [
+          h('input.guess', {value: guessValue}),
+        ]),
+
+        h('div', [
+          h('button.makeGuess', 'Guess')
+        ])
       ]),
 
       displayMoreInfoIfGuessed(flashcard.staff_member, showMoreInformation, guessResult, guessScore)
