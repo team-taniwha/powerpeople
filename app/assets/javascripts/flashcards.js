@@ -10,20 +10,35 @@ function view ({flashcard$}) {
     h('.flashcard', [
       h('img', {attributes: {src: flashcard.staff_member.image_url}}),
       h('input'),
-      h('button', 'Guess')
+      h('button.guess', 'Guess')
     ])
   );
 }
 
-function model (DOM) {
+function model ({guess$}) {
+  const people$ = Cycle.Rx.Observable.from(window.flashcards)
+    .concat(Cycle.Rx.Observable.never());
+
   return {
-    flashcard$: Cycle.Rx.Observable.from(window.flashcards)
+    flashcard$: Cycle.Rx.Observable.zip(
+      people$,
+      guess$,
+      (person, guess) => {
+        return person;
+      }
+    )
+  };
+}
+
+function intent (DOM) {
+  return {
+    guess$: DOM.get('.guess', 'click').startWith({name: 'nah'})
   };
 }
 
 function main ({DOM}) {
   return {
-    DOM: view(model(DOM))
+    DOM: view(model(intent(DOM)))
   };
 }
 
