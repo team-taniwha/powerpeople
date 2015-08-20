@@ -1,19 +1,37 @@
-var Flashcards = (function () {
+/* globals $ */
 
-  function setupMoreInfoButton () {
-    $('.show-more-info').on('click', function () {
-      $(this).hide();
-      $('.guess-name').hide();
-      $('.more-info').show();
-    });
-  };
+const Cycle = require('@cycle/core');
+const {h, makeDOMDriver} = require('@cycle/dom');
 
+function log (thing) { console.log(thing); return thing; }
+
+function view ({flashcard$}) {
+  return flashcard$.map(log).map(flashcard =>
+    h('.flashcard', [
+      h('img', {attributes: {src: flashcard.staff_member.image_url}}),
+      h('input'),
+      h('button', 'Guess')
+    ])
+  );
+}
+
+function model (DOM) {
   return {
-    start: function () {
-      setupMoreInfoButton();
-    }
+    flashcard$: Cycle.Rx.Observable.from(window.flashcards)
   };
-}());
+}
 
-$(Flashcards.start);
+function main ({DOM}) {
+  return {
+    DOM: view(model(DOM))
+  };
+}
+
+$(() => {
+  const drivers = {
+    DOM: makeDOMDriver('#app')
+  };
+
+  Cycle.run(main, drivers);
+});
 

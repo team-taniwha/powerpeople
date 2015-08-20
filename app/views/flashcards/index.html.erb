@@ -1,3 +1,5 @@
-<div class='flashcard-container'>
-  <%= render @flashcards.first %>
-</div>
+<script>
+window.flashcards = <%= raw(@flashcards.to_json(include: :staff_member)) %>;
+</script>
+
+<div id='app'></div>

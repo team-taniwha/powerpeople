@@ -42,6 +42,8 @@ GEM
     arel (6.0.2)
     binding_of_caller (0.7.2)
       debug_inspector (>= 0.0.1)
+    browserify-rails (1.0.1)
+      railties (>= 4.0.0, < 5.0)
     builder (3.2.2)
     byebug (3.5.1)
       columnize (~> 0.8)
@@ -185,6 +187,7 @@ PLATFORMS
 
 DEPENDENCIES
   acts_as_learnable
+  browserify-rails
   byebug
   httparty
   jbuilder (~> 2.0)

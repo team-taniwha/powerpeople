@@ -8,6 +8,7 @@ Bundler.require(*Rails.groups)
 
 module People
   class Application < Rails::Application
+    config.browserify_rails.commandline_options = "-t babelify"
 
     SimpleGoogleAuth.configure do |config|
       config.client_id = ENV.fetch('PEOPLE_CLIENT_ID')
