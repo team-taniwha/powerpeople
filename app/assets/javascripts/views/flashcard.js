@@ -1,15 +1,15 @@
 const {h} = require('@cycle/dom');
 
 function guessMessage (score) {
-  if (score > 0.98) {
+  if (score === 5) {
     return 'Perfect!';
-  } else if (score > 0.9) {
+  } else if (score === 4) {
     return 'Very close!';
-  } else if (score > 0.8) {
+  } else if (score === 3) {
     return 'Almost...';
-  } else if (score > 0.7) {
+  } else if (score === 2) {
     return 'Not quite...';
-  } else {
+  } else if (score === 1) {
     return 'Long way off.'
   }
 }
@@ -21,7 +21,7 @@ function displayIf (bool) {
 function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessResult, guessScore) {
   return (
     h('.more-info', {attributes: displayIf(showMoreInformation)}, [
-      h('p', `You guessed: ${guessResult.name}. ${guessMessage(guessScore)}`),
+      h('p', guessMessage(guessScore)),
       h('h2', staffMember.name),
       h('h3', staffMember.position),
       h('p', staffMember.bio),

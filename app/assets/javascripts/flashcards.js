@@ -5,6 +5,7 @@ const {makeDOMDriver} = require('@cycle/dom');
 
 const renderFlashcard = require('./views/flashcard');
 const calculateGuessScore = require('./calculations/guess-score');
+const sendGuessesToServer = require('./server/guesses');
 
 function log (label) { return (thing) => { console.log(label, thing); return thing; }; }
 
@@ -23,12 +24,23 @@ function model ({guess$, nextFlashcard$}) {
     nextFlashcard$.map(_ => false)
   ).map(log('showMoreInformation'));
 
+  const state$ = Cycle.Rx.Observable.combineLatest(
+    Cycle.Rx.Observable.zip(flashcard$, nextFlashcard$, (f, _) => f),
+    showMoreInformation$,
+    guess$
+  ).map(log('zippedFlashcards'));
+
+  const guessScore$ = guess$.withLatestFrom(state$, (guess, [flashCard, _, __]) => {
+    return {
+      flashCardId: flashCard.id,
+      score: calculateGuessScore(guess.name, flashCard.staff_member.name)
+    };
+  });
+
+  sendGuessesToServer(guessScore$);
+
   return {
-    state$: Cycle.Rx.Observable.combineLatest(
-      Cycle.Rx.Observable.zip(flashcard$, nextFlashcard$, (f, _) => f),
-      showMoreInformation$,
-      guess$
-    ).map(log('zippedFlashcards'))
+    state$
   };
 }
 
