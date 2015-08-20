@@ -38,7 +38,7 @@ function renderFlashcard (flashcard, index, showMoreInformation, guessResult, gu
 
         h('div', {attributes: displayIf(!showMoreInformation)}, [
           h('div', [
-            h('input.guess', {value: guessValue})
+            h('input.guess', {type: 'text', value: guessValue})
           ]),
 
           h('div', [
