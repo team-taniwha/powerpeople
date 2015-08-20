@@ -11,8 +11,8 @@ const sendGuessesToServer = require('./server/guesses');
 function log (label) { return (thing) => { console.log(label, thing); return thing; }; }
 
 function view ({state$}) {
-  return state$.map(log('state')).map(({state, flashcard, guessResult, guessScore}) => (
-    renderFlashcard(flashcard, state === 'madeGuess', guessResult, guessScore.score)
+  return state$.map(log('state')).map(({state, flashcard, guessResult, guessScore, guessInputValue}) => (
+    renderFlashcard(flashcard, state === 'madeGuess', guessResult, guessScore.score, guessInputValue)
   ));
 }
 
@@ -34,12 +34,15 @@ function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$}) {
     return states[(currentStateIndex + 1) % states.length];
   }, 'readyToGuess').startWith('readyToGuess').map(log('currentState'));
 
+  const stateReadyToGuess$ = state$.filter(state => state === 'readyToGuess');
+  const stateMadeGuess$ = state$.filter(state => state === 'madeGuess');
+
   const flashcard$ = Cycle.Rx.Observable.from(window.flashcards)
     .concat(Cycle.Rx.Observable.never())
-    .zip(state$.filter(state => state === 'readyToGuess'), (flashcard, _) => flashcard)
+    .zip(stateReadyToGuess$, (flashcard, _) => flashcard)
     .map(log('flashcard'));
 
-  const guess$ = state$.filter(state => state === 'madeGuess')
+  const guess$ = stateMadeGuess$
     .withLatestFrom(guessValue$, (_, guess) => ({name: guess}))
     .map(log('guess'));
 
@@ -57,7 +60,8 @@ function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$}) {
       guess$,
       guessScore$,
       flashcard$,
-      (state, guessResult, guessScore, flashcard) => ({state, guessResult, guessScore, flashcard})
+      stateReadyToGuess$.map(_ => ''),
+      (state, guessResult, guessScore, flashcard, guessInputValue) => ({state, guessResult, guessScore, flashcard, guessInputValue})
     ).map(log('modelState')).startWith({state: 'readyToGuess', flashcard: window.flashcards[0], guessScore: {name: 'fgsfdg'}, guessResult: {score: 3}})
   };
 }

@@ -10,7 +10,7 @@ function guessMessage (score) {
   } else if (score === 2) {
     return 'Not quite...';
   } else if (score === 1) {
-    return 'Long way off.'
+    return 'Long way off.';
   }
 }
 
@@ -30,13 +30,13 @@ function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessResult
   );
 }
 
-function renderFlashcard (flashcard, showMoreInformation, guessResult, guessScore) {
+function renderFlashcard (flashcard, showMoreInformation, guessResult, guessScore, guessValue) {
   return (
     h('.flashcard', [
       h('img', {attributes: {src: flashcard.staff_member.image_url}}),
 
       h('div', {attributes: displayIf(!showMoreInformation)}, [
-        h('input.guess'),
+        h('input.guess', {value: guessValue}),
         h('button.makeGuess', 'Guess')
       ]),
 
