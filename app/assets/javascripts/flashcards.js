@@ -29,6 +29,19 @@ function view ({state$}) {
   ));
 }
 
+function focusSecondInput () {
+  const secondInput = $('input').get(1);
+
+  if (secondInput) {
+    console.log('focusing', secondInput);
+    secondInput.focus();
+  }
+}
+
+function dirtySideEffects (stateReadyToGuess$) {
+  stateReadyToGuess$.delay(2000).forEach(focusSecondInput);
+}
+
 function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$}) {
   const states = [
     'readyToGuess',
@@ -39,13 +52,13 @@ function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$}) {
     guessButton$.map(_ => 'guessClick'),
     nextFlashcard$.map(_ => 'nextClick'),
     enterKey$.map(_ => 'enter')
-  ).map(log('progress'));
+  );
 
   const state$ = progressState$.scan((currentState, __) => {
     const currentStateIndex = _.findIndex(states, state => state === currentState);
 
     return states[(currentStateIndex + 1) % states.length];
-  }, 'readyToGuess').startWith('readyToGuess').map(log('currentState'));
+  }, 'readyToGuess').startWith('readyToGuess');
 
   const stateReadyToGuess$ = state$.filter(state => state === 'readyToGuess');
   const stateMadeGuess$ = state$.filter(state => state === 'madeGuess');
@@ -58,12 +71,12 @@ function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$}) {
     flashcard$.skip(1),
     flashcard$.skip(2)
    ).zip(stateReadyToGuess$, (flashcards, _) => flashcards)
-    .startWith([{}, {}, {}])
-    .map(log('zipped flashcards'));
+    .startWith([{}, {staff_member: {name: ''}}, {}]);
 
   const guess$ = stateMadeGuess$
-    .withLatestFrom(guessValue$, (_, guess) => ({name: guess}))
-    .map(log('guess'));
+    .withLatestFrom(guessValue$, (_, guess) => ({name: guess}));
+
+  dirtySideEffects(stateReadyToGuess$);
 
   const guessScore$ = guess$.withLatestFrom(flashcards$, (guess, flashcards) => {
     return {
@@ -81,7 +94,7 @@ function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$}) {
       flashcards$,
       stateReadyToGuess$.map(_ => ''),
       (state, guessResult, guessScore, flashcards, guessInputValue) => ({state, guessResult, guessScore, flashcards, guessInputValue})
-    ).map(log('modelState')).startWith({state: 'readyToGuess', flashcards: [window.flashcards[0], window.flashcards[1], window.flashcards[2]], guessScore: {name: 'fgsfdg'}, guessResult: {score: 3}})
+    ).map(log('modelState')).startWith({state: 'readyToGuess', flashcards: window.flashcards.slice(0, 3), guessScore: {name: 'fgsfdg'}, guessResult: {score: 3}})
   };
 }
 
@@ -90,7 +103,7 @@ function keyPressed (key) {
 }
 
 function intent (DOM) {
-  const keyPress$ = Cycle.Rx.Observable.fromEvent(document, 'keypress');
+  const keyPress$ = Cycle.Rx.Observable.fromEvent(document, 'keypress').map(log('keypress'));
 
   return {
     guessValue$: DOM.get('.guess', 'input').map(e => e.target.value).startWith(''),

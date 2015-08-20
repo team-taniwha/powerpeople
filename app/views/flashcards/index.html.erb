@@ -1,5 +1,29 @@
 <script>
-window.flashcards = <%= raw(@flashcards.to_json(include: :staff_member)) %>;
+  var introCard = {
+    id: 'notReal',
+    staff_member: {
+      name: 'Welcome to PowerPeople',
+      position: 'Press enter to start',
+      bio: '...',
+      image_url: '/assets/winky.png'
+    }
+  }
+
+  var introCard2 = {
+    id: 'alsoNotReal',
+    staff_member: {
+      name: 'Welcome to PowerPeople',
+      position: 'Press enter to start',
+      bio: '',
+      image_url: '/assets/winky.png'
+    }
+  }
+
+  var introCards = [introCard, introCard2];
+
+  var serverFlashcards = <%= raw(@flashcards.to_json(include: :staff_member)) %>;
+
+  window.flashcards = serverFlashcards;
 </script>
 
 <div id='app'></div>
