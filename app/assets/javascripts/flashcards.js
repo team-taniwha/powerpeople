@@ -4,12 +4,13 @@ const Cycle = require('@cycle/core');
 const {makeDOMDriver} = require('@cycle/dom');
 
 const renderFlashcard = require('./views/flashcard');
+const calculateGuessScore = require('./calculations/guess-score');
 
 function log (label) { return (thing) => { console.log(label, thing); return thing; }; }
 
 function view ({state$}) {
   return state$.map(log('state')).map(([flashcard, showMoreInformation, guessResult]) => (
-    renderFlashcard(flashcard, showMoreInformation, guessResult)
+    renderFlashcard(flashcard, showMoreInformation, guessResult, calculateGuessScore(flashcard.staff_member.name, guessResult.name))
   ));
 }
 
