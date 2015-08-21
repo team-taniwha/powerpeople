@@ -9,8 +9,7 @@ body {
 }
 
 .flashcard {
-  transform: scale(0.95);
-  transition: top 2s ease-in-out;
+  transition: all 2s ease-in-out;
 
   position: absolute;
   left: 0;
@@ -39,14 +38,18 @@ body {
 
 .position-0 {
   top: -800px;
+  transform: scale(0.4);
 }
 
 .position-1 {
+  filter: opacity(100%);
   top: 0px;
+  transform: scale(0.95);
 }
 
 .position-2 {
   top: 800px;
+  transform: scale(0.4);
 }
 
 .flashcard-container {
