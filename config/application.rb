@@ -8,8 +8,6 @@ Bundler.require(*Rails.groups)
 
 module People
   class Application < Rails::Application
-    config.force_ssl = true
-
     config.browserify_rails.commandline_options = "-t babelify"
 
     SimpleGoogleAuth.configure do |config|
