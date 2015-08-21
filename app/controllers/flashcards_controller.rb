@@ -4,7 +4,7 @@ class FlashcardsController < ApplicationController
       MakeFlashcards.for(current_user).call
     end
 
-    @flashcards = current_user.flashcards.select(&:due_today?)
+    @flashcards = current_user.flashcards
       .sort_by { |flashcard| flashcard.due || Time.now }
   end
 

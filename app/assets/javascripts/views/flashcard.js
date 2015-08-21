@@ -18,12 +18,13 @@ function displayIf (bool) {
   return {style: `display: ${bool ? 'inline-block' : 'none'}`};
 }
 
-function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessResult, guessScore) {
+function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessResult, guessScore, buttonClicked=false) {
   return (
     h('.more-info', {attributes: displayIf(showMoreInformation)}, [
-      h(`div.name.score-${guessScore}`, staffMember.name),
+      h('.name', staffMember.name),
       h('h3', staffMember.position),
-      h('button.proceed', 'Next')
+      h(`h2.score-${guessScore}`, guessMessage(guessScore)),
+      h(`button.proceed ${buttonClicked ? '.clicked' : ''}`, 'Next')
     ])
   );
 }
@@ -43,7 +44,7 @@ function renderFlashcard (flashcard, index, showMoreInformation, guessResult, gu
         ])
       ]),
 
-      displayMoreInfoIfGuessed(flashcard.staff_member, showMoreInformation, guessResult, guessScore)
+      displayMoreInfoIfGuessed(flashcard.staff_member, showMoreInformation, guessResult, guessScore, index === 0)
     ])
   );
 }
