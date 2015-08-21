@@ -8,7 +8,7 @@ class MakeFlashcards
   end
 
   def call
-    staff_members_to_make_flashcards_for.each do |staff_member|
+    staff_members_to_make_flashcards_for.shuffle.each do |staff_member|
       make_flashcard_of(staff_member)
     end
   end
