@@ -1,5 +1,7 @@
 class FlashcardsController < ApplicationController
   def index
+    response.headers.delete "X-Frame-Options"
+
     if current_user.flashcards.count < StaffMember.count
       MakeFlashcards.for(current_user).call
     end
