@@ -38,11 +38,17 @@ function focusSecondInput () {
   }
 }
 
-function dirtySideEffects (stateReadyToGuess$) {
-  stateReadyToGuess$.delay(2000).forEach(focusSecondInput);
+function scrollToTop () {
+  scroll(0, 0);
 }
 
-function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$}) {
+function dirtySideEffects (scroll$, stateReadyToGuess$) {
+  stateReadyToGuess$.delay(2000).forEach(focusSecondInput);
+
+  scroll$.sample(Cycle.Rx.Observable.interval(100)).forEach(scrollToTop);
+}
+
+function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$, scroll$}) {
   const states = [
     'readyToGuess',
     'madeGuess'
@@ -76,7 +82,7 @@ function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$}) {
   const guess$ = stateMadeGuess$
     .withLatestFrom(guessValue$, (_, guess) => ({name: guess}));
 
-  dirtySideEffects(stateReadyToGuess$);
+  dirtySideEffects(scroll$, stateReadyToGuess$);
 
   const guessScore$ = guess$.withLatestFrom(flashcards$, (guess, flashcards) => {
     return {
@@ -104,13 +110,15 @@ function keyPressed (key) {
 
 function intent (DOM) {
   const keyPress$ = Cycle.Rx.Observable.fromEvent(document.body, 'keypress').map(log('keypress'));
+  const scroll$ = Cycle.Rx.Observable.fromEvent(document, 'scroll');
 
   return {
     guessValue$: DOM.get('.guess', 'input').map(e => e.target.value).startWith(''),
     guessButton$: DOM.get('.makeGuess', 'click'),
     nextFlashcard$: DOM.get('.proceed', 'click'),
 
-    enterKey$: keyPress$.filter(keyPressed('Enter'))
+    enterKey$: keyPress$.filter(keyPressed('Enter')),
+    scroll$
   };
 }
 
