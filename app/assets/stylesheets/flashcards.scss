@@ -15,14 +15,14 @@ body {
   left: 0;
   right: 0;
 
-  min-height: 450px;
+  min-height: 350px;
   max-height: 600px;
 
   max-width: 450px;
   min-width: 300px;
-  margin: 50px auto;
+  margin: 30px auto;
 
-  padding: 50px 20px;
+  padding: 50px 10px;
   background: #FFF;
   text-align: center;
 
@@ -30,8 +30,8 @@ body {
 
   img {
     margin: 30px;
-    width: 300px;
-    height: 300px;
+    width: 200px;
+    height: 200px;
   }
   z-index: -1;
 }
@@ -44,7 +44,7 @@ body {
 .position-1 {
   filter: opacity(100%);
   top: 0px;
-  transform: scale(0.92);
+  transform: scale(0.85);
 }
 
 .position-2 {
@@ -97,7 +97,7 @@ body {
 }
 
 .guess {
-  width: 300px;
+  width: 250px;
   margin-top: -2px;
 }
 
