@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   resources :flashcards
   root to: 'flashcards#index'
+  get 'sign_in', to: 'flashcards#sign_in'
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 

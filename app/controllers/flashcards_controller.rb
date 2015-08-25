@@ -22,6 +22,10 @@ class FlashcardsController < ApplicationController
     redirect_to :action => :index
   end
 
+  def sign_in
+    redirect_to 'https://winkyworld.powershop.com/PowerPeople'
+  end
+
   def current_user
     @current_user ||= User.where(
       email: google_auth_data.email
