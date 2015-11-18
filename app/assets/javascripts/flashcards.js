@@ -43,7 +43,7 @@ function scrollToTop () {
 }
 
 function dirtySideEffects (scroll$, stateReadyToGuess$) {
-  stateReadyToGuess$.delay(2000).forEach(focusSecondInput);
+  stateReadyToGuess$.delay(900).forEach(focusSecondInput);
 
   scroll$.sample(Cycle.Rx.Observable.interval(100)).forEach(scrollToTop);
 }
