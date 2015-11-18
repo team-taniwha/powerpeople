@@ -9,7 +9,7 @@ body {
 }
 
 .flashcard {
-  transition: all 2s ease-in-out;
+  transition: all 800ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
   position: absolute;
   left: 0;
