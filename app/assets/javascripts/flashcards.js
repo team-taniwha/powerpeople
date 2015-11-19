@@ -49,25 +49,55 @@ function dirtySideEffects (scroll$, stateReadyToGuess$) {
   scroll$.sample(Cycle.Rx.Observable.interval(100)).forEach(scrollToTop);
 }
 
-function makeGuess () {
+function makeGuess (guessText) {
   return state => {
-    state.flashcardReviewIndex += 1;
+    const flashcard = state.flashcards[state.flashcardReviewIndex + 1];
 
-    return state;
+    const newGuess = {
+      name: guessText,
+      score: calculateGuessScore(flashcard.staff_member.name, guessText),
+      flashcard
+    };
+
+    const stateUpdates = {
+      flashcardReviewIndex: state.flashcardReviewIndex + 1,
+      guesses: state.guesses.concat([newGuess])
+    }
+
+    return Object.assign(
+      {},
+      state,
+      stateUpdates
+    );
   };
 }
 
-function model ({guessButton$}, flashcards) {
+function makeGuessRequest (guess) {
+  return {
+    url: '/flashcards/' + guess.flashcard.id,
+    method: 'POST',
+    dataType: 'JSON',
+    data: {
+      recollection_quality: guess.score,
+      _method: 'PUT'
+    }
+  }
+}
+
+function model ({guessButton$, guessText$}, flashcards) {
   const initialState = {
     flashcards,
-    flashcardReviewIndex: 0
+    flashcardReviewIndex: 0,
+    guesses: []
   };
 
+  const makeGuess$ = guessButton$.map(makeGuess);
+
   const action$ = Rx.Observable.merge(
-    guessButton$.map(makeGuess)
+    makeGuess$.withLatestFrom(guessText$, (_, text) => makeGuess(text))
   );
 
-  return action$
+  const state$ = action$
     .scan((state, action) => action(state), initialState)
     .startWith(initialState)
     .map(state => {
@@ -78,6 +108,16 @@ function model ({guessButton$}, flashcards) {
       );
     })
     .distinctUntilChanged();
+
+  const HTTP = state$.pluck('guesses')
+    .filter(guesses => guesses.length >= 1)
+    .map(_.last)
+    .map(makeGuessRequest);
+
+  return {
+    state$,
+    HTTP
+  };
 }
 
 function keyPressed (key) {
@@ -94,7 +134,7 @@ function intent (DOM) {
   );
 
   return {
-    guessValue$: DOM.select('.guess').events('input').map(e => e.target.value).startWith(''),
+    guessText$: DOM.select('.guess').events('input').map(e => e.target.value).startWith(''),
     guessButton$: DOM.select('.makeGuess').events('click'),
     nextFlashcard$: DOM.select('.proceed').events('click'),
 
@@ -105,7 +145,5 @@ function intent (DOM) {
 }
 
 module.exports = function Flashcards ({DOM, props}) {
-  return {
-    state$: model(intent(DOM), props.flashcards)
-  };
+  return model(intent(DOM), props.flashcards);
 }

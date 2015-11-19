@@ -150,11 +150,11 @@ describe('the flashcard app', () => {
 
     const input$ = scheduler.createHotObservable(
       onNext(250, {target: {value: 'Dane Buck'}})
-    )
+    );
 
     const makeGuess$ = scheduler.createHotObservable(
       onNext(300, {})
-    )
+    );
 
     const mockedResponse = mockDOMResponse({
       '.guess': {
@@ -173,6 +173,41 @@ describe('the flashcard app', () => {
     collectionAssert.assertEqual([
       onNext(200, 'Dane Buchanan'),
       onNext(300, 'Dan Lee')
+    ], results.messages);
+  });
+
+  it('submits guesses to the server', () => {
+    const scheduler = new Rx.TestScheduler();
+
+    const input$ = scheduler.createHotObservable(
+      onNext(250, {target: {value: 'Dane Buck'}})
+    );
+
+    const makeGuess$ = scheduler.createHotObservable(
+      onNext(300, {})
+    );
+
+    const mockedResponse = mockDOMResponse({
+      '.guess': {
+        'input': input$
+      },
+
+      '.makeGuess': {
+        'click': makeGuess$
+      }
+    });
+
+    const results = scheduler.startScheduler(() => {
+      return Flashcards({DOM: mockedResponse, props}).HTTP;
+    });
+
+    collectionAssert.assertEqual([
+      onNext(300, {
+        url: '/flashcards/251',
+        method: 'POST',
+        dataType: 'JSON',
+        data: {recollection_quality: 3, _method: 'PUT'}
+      })
     ], results.messages);
   });
 });
