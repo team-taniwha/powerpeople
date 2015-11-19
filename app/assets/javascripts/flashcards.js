@@ -49,7 +49,35 @@ function dirtySideEffects (scroll$, stateReadyToGuess$) {
   scroll$.sample(Cycle.Rx.Observable.interval(100)).forEach(scrollToTop);
 }
 
-function model ({}) {
+function makeGuess () {
+  return state => {
+    state.flashcardReviewIndex += 1;
+
+    return state;
+  };
+}
+
+function model ({guessButton$}, flashcards) {
+  const initialState = {
+    flashcards,
+    flashcardReviewIndex: 0
+  };
+
+  const action$ = Rx.Observable.merge(
+    guessButton$.map(makeGuess)
+  );
+
+  return action$
+    .scan((state, action) => action(state), initialState)
+    .startWith(initialState)
+    .map(state => {
+      return Object.assign(
+        {},
+        state,
+        {flashcardsToReview: state.flashcards.slice(state.flashcardReviewIndex, state.flashcardReviewIndex + 3)}
+      );
+    })
+    .distinctUntilChanged();
 }
 
 function keyPressed (key) {
@@ -66,7 +94,7 @@ function intent (DOM) {
   );
 
   return {
-    guessValue$: DOM.select('.guess').events('input').map(e => e.tarselect.value).startWith(''),
+    guessValue$: DOM.select('.guess').events('input').map(e => e.target.value).startWith(''),
     guessButton$: DOM.select('.makeGuess').events('click'),
     nextFlashcard$: DOM.select('.proceed').events('click'),
 
@@ -77,11 +105,7 @@ function intent (DOM) {
 }
 
 module.exports = function Flashcards ({DOM, props}) {
-  const initialState = {
-    flashcards: props.flashcards.slice(0, 3)
-  };
-
   return {
-    state$: Rx.Observable.just(initialState)
+    state$: model(intent(DOM), props.flashcards)
   };
 }
