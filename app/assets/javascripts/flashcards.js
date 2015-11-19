@@ -4,7 +4,7 @@ const Cycle = require('@cycle/core');
 const {h} = require('@cycle/dom');
 const _ = require('lodash');
 
-const Rx = Cycle.Rx;
+const Rx = require('rx');
 
 const renderFlashcard = require('./views/flashcard');
 const calculateGuessScore = require('./calculations/guess-score');
@@ -42,9 +42,45 @@ function scrollToTop () {
 }
 
 function dirtySideEffects (scroll$, stateReadyToGuess$) {
-  stateReadyToGuess$.delay(2000).forEach(focusSecondInput);
+  stateReadyToGuess$.delay(900).forEach(focusSecondInput);
 
-  scroll$.sample(Cycle.Rx.Observable.interval(100)).forEach(scrollToTop);
+  scroll$.sample(Rx.Observable.interval(100)).forEach(scrollToTop);
+}
+
+function makeGuessRequest (guess) {
+  return {
+    url: '/flashcards/' + guess.flashcard.id,
+    method: 'POST',
+    dataType: 'JSON',
+    data: {
+      recollection_quality: guess.score,
+      _method: 'PUT'
+    }
+  };
+}
+
+function keyPressed (key) {
+  return (ev) => ev.key === key || ev.keyIdentifier === key;
+}
+
+function intent (DOM) {
+  const keyPress$ = Rx.Observable.fromEvent(document.body, 'keypress');
+  const scroll$ = Rx.Observable.fromEvent(document.body, 'scroll');
+
+  const transitionEnd$ = Rx.Observable.merge(
+    DOM.select(':root').events('transitionend'),
+    DOM.select(':root').events('webkitTransitionEnd')
+  );
+
+  return {
+    guessText$: DOM.select('.guess').events('input').map(e => e.target.value).startWith(''),
+    guessButton$: DOM.select('.makeGuess').events('click'),
+    nextFlashcard$: DOM.select('.proceed').events('click'),
+
+    enterKey$: keyPress$.filter(keyPressed('Enter')),
+    scroll$,
+    transitionEnd$
+  };
 }
 
 function makeGuess (guessText) {
@@ -88,19 +124,25 @@ function nextFlashcard () {
   };
 }
 
-function makeGuessRequest (guess) {
-  return {
-    url: '/flashcards/' + guess.flashcard.id,
-    method: 'POST',
-    dataType: 'JSON',
-    data: {
-      recollection_quality: guess.score,
-      _method: 'PUT'
+function handleEnterKey (text) {
+  return state => {
+    if (state.mode === 'readyToGuess') {
+      return makeGuess(text)(state);
+    } else if (state.mode === 'madeGuess') {
+      return nextFlashcard()(state);
     }
   };
 }
 
-function model ({guessButton$, guessText$, nextFlashcard$}, flashcards) {
+function actions ({guessButton$, guessText$, nextFlashcard$, enterKey$}) {
+  return Rx.Observable.merge(
+    guessButton$.withLatestFrom(guessText$, (_, text) => makeGuess(text)),
+    nextFlashcard$.map(nextFlashcard),
+    enterKey$.withLatestFrom(guessText$, (_, text) => handleEnterKey(text))
+  );
+}
+
+function model (action$, flashcards) {
   const initialState = {
     flashcards,
     flashcardsToReview: flashcards.slice(0, 3),
@@ -108,11 +150,6 @@ function model ({guessButton$, guessText$, nextFlashcard$}, flashcards) {
     guesses: [],
     mode: 'readyToGuess'
   };
-
-  const action$ = Rx.Observable.merge(
-    guessButton$.withLatestFrom(guessText$, (_, text) => makeGuess(text)),
-    nextFlashcard$.map(nextFlashcard)
-  );
 
   const state$ = action$
     .scan((state, action) => action(state), initialState)
@@ -132,30 +169,7 @@ function model ({guessButton$, guessText$, nextFlashcard$}, flashcards) {
   };
 }
 
-function keyPressed (key) {
-  return (ev) => ev.key === key || ev.keyIdentifier === key;
-}
-
-function intent (DOM) {
-  const keyPress$ = DOM.select('flashcards').events('keypress');
-  const scroll$ = DOM.select('flashcards').events('scroll');
-
-  const transitionEnd$ = Cycle.Rx.Observable.merge(
-    DOM.select(':root').events('transitionend'),
-    DOM.select(':root').events('webkitTransitionEnd')
-  );
-
-  return {
-    guessText$: DOM.select('.guess').events('input').map(e => e.target.value).startWith(''),
-    guessButton$: DOM.select('.makeGuess').events('click'),
-    nextFlashcard$: DOM.select('.proceed').events('click'),
-
-    enterKey$: keyPress$.filter(keyPressed('Enter')),
-    scroll$,
-    transitionEnd$
-  };
-}
 
 module.exports = function Flashcards ({DOM}, props) {
-  return model(intent(DOM), props.flashcards);
+  return model(actions(intent(DOM)), props.flashcards);
 }

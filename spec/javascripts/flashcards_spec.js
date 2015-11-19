@@ -11,6 +11,10 @@ const subscribe = Rx.ReactiveTest.subscribe;
 
 const Flashcards = require('../../app/assets/javascripts/flashcards');
 
+Rx.Observable.fromEvent = (_element, selector) => {
+  return Rx.Observable.empty();
+}
+
 const flashcardData = [
   {
     "id": 170,
@@ -185,6 +189,43 @@ describe('the flashcard app', () => {
     ], results.messages);
   });
 
+  it('lets you use enter to make guesses and progress', () => {
+    const scheduler = new Rx.TestScheduler();
+
+    const input$ = scheduler.createHotObservable(
+      onNext(250, {target: {value: 'Wilmer'}})
+    );
+
+    const keypress$ = scheduler.createHotObservable(
+      onNext(300, {key: 'Enter'}),
+      onNext(350, {key: 'Enter'})
+    );
+
+    Rx.Observable.fromEvent = (_element, selector) => {
+      if (selector === 'keypress') {
+        return keypress$;
+      }
+
+      return Rx.Observable.empty();
+    };
+
+    const mockedResponse = mockDOMResponse({
+      '.guess': {
+        'input': input$
+      }
+    });
+
+    const results = scheduler.startScheduler(() => {
+      return Flashcards({DOM: mockedResponse}, props).state$.pluck('flashcardsToReview').map(f => f.map(card => card.staff_member.name));
+    });
+
+    collectionAssert.assertEqual([
+      onNext(200, ['Fred', 'Wilma', 'Dino']),
+      onNext(300, ['Fred', 'Wilma', 'Dino']),
+      onNext(350, ['Wilma', 'Dino', 'Baby Puss'])
+    ], results.messages);
+  });
+
   it('changes mode as expected', () => {
     const scheduler = new Rx.TestScheduler();
 
@@ -224,6 +265,7 @@ describe('the flashcard app', () => {
       onNext(350, 'readyToGuess')
     ], results.messages);
   });
+
   it('submits guesses to the server', () => {
     const scheduler = new Rx.TestScheduler();
 
