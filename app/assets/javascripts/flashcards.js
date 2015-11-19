@@ -1,39 +1,36 @@
 /* globals $ */
 
-const Cycle = require('@cycle/core');
-const {h, makeDOMDriver} = require('@cycle/dom');
+const {h} = require('@cycle/dom');
 const _ = require('lodash');
+
+const Rx = require('rx');
 
 const renderFlashcard = require('./views/flashcard');
 const calculateGuessScore = require('./calculations/guess-score');
-const sendGuessesToServer = require('./server/guesses');
 
 function log (label) { return (thing) => { console.log(label, thing); return thing; }; }
 
-function view ({state$}) {
+function view (state) {
   return (
-    state$.map(log('state')).map(({state, flashcards, guessResult, guessScore, guessInputValue}) => (
-      h('div.flashcards', [
-        flashcards.map((flashcard, index) => (
-          renderFlashcard(
-            flashcard,
-            index,
-            state === 'madeGuess' || index === 0,
-            guessResult,
-            guessScore.score,
-            guessInputValue
-          ))
-        )
-      ])
-    )
-  ));
+    h('div.flashcards', [
+      state.flashcardsToReview.map((flashcard, index) => (
+        renderFlashcard(
+          flashcard,
+          index,
+          state.mode === 'madeGuess' || index === 0,
+          state.guessResult,
+          _.last(state.guesses) && _.last(state.guesses).score,
+          state.guessInputValue
+        ))
+      )
+    ])
+  );
 }
 
 function focusSecondInput () {
-  const secondInput = $('input').get(1);
+  const secondInput = $('input').select(1);
 
   if (secondInput) {
-    console.log('focusing', secondInput);
     secondInput.focus();
   }
 }
@@ -45,62 +42,19 @@ function scrollToTop () {
 function dirtySideEffects (scroll$, stateReadyToGuess$) {
   stateReadyToGuess$.delay(900).forEach(focusSecondInput);
 
-  scroll$.sample(Cycle.Rx.Observable.interval(100)).forEach(scrollToTop);
+  scroll$.sample(Rx.Observable.interval(100)).forEach(scrollToTop);
 }
 
-function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$, scroll$}) {
-  const states = [
-    'readyToGuess',
-    'madeGuess'
-  ];
-
-  const progressState$ = Cycle.Rx.Observable.merge(
-    guessButton$.map(_ => 'guessClick'),
-    nextFlashcard$.map(_ => 'nextClick'),
-    enterKey$.map(_ => 'enter')
-  );
-
-  const state$ = progressState$.scan((currentState, __) => {
-    const currentStateIndex = _.findIndex(states, state => state === currentState);
-
-    return states[(currentStateIndex + 1) % states.length];
-  }, 'readyToGuess').startWith('readyToGuess');
-
-  const stateReadyToGuess$ = state$.filter(state => state === 'readyToGuess');
-  const stateMadeGuess$ = state$.filter(state => state === 'madeGuess');
-
-  const flashcard$ = Cycle.Rx.Observable.from(window.flashcards)
-    .concat(Cycle.Rx.Observable.never());
-
-  const flashcards$ = Cycle.Rx.Observable.zip(
-    flashcard$,
-    flashcard$.skip(1),
-    flashcard$.skip(2)
-   ).zip(stateReadyToGuess$, (flashcards, _) => flashcards)
-    .startWith([{}, {staff_member: {name: ''}}, {}]);
-
-  const guess$ = stateMadeGuess$
-    .withLatestFrom(guessValue$, (_, guess) => ({name: guess}));
-
-  dirtySideEffects(scroll$, stateReadyToGuess$);
-
-  const guessScore$ = guess$.withLatestFrom(flashcards$, (guess, flashcards) => {
-    return {
-      flashcardId: flashcards[1].id,
-      score: calculateGuessScore(guess.name, flashcards[1].staff_member.name)
-    };
-  });
-
-  sendGuessesToServer(guessScore$.map(log('submittedScore')));
-
+function makeGuessRequest (guess) {
   return {
-    state$: state$.withLatestFrom(
-      guess$,
-      guessScore$,
-      flashcards$,
-      stateReadyToGuess$.map(_ => ''),
-      (state, guessResult, guessScore, flashcards, guessInputValue) => ({state, guessResult, guessScore, flashcards, guessInputValue})
-    ).map(log('modelState')).startWith({state: 'readyToGuess', flashcards: window.flashcards.slice(0, 3), guessScore: {name: 'fgsfdg'}, guessResult: {score: 3}})
+    url: '/flashcards/' + guess.flashcard.id,
+    method: 'PUT',
+    type: 'application/json',
+    send: {
+      recollection_quality: guess.score,
+      _method: 'PUT',
+      authenticity_token: global.authenticity_token
+    }
   };
 }
 
@@ -109,30 +63,111 @@ function keyPressed (key) {
 }
 
 function intent (DOM) {
-  const keyPress$ = Cycle.Rx.Observable.fromEvent(document.body, 'keypress').map(log('keypress'));
-  const scroll$ = Cycle.Rx.Observable.fromEvent(document, 'scroll');
+  const keyPress$ = Rx.Observable.fromEvent(document.body, 'keypress');
+  const scroll$ = Rx.Observable.fromEvent(document.body, 'scroll');
+
+  const transitionEnd$ = Rx.Observable.merge(
+    DOM.select(':root').events('transitionend'),
+    DOM.select(':root').events('webkitTransitionEnd')
+  );
 
   return {
-    guessValue$: DOM.get('.guess', 'input').map(e => e.target.value).startWith(''),
-    guessButton$: DOM.get('.makeGuess', 'click'),
-    nextFlashcard$: DOM.get('.proceed', 'click'),
+    guessText$: DOM.select('.guess').events('input').map(e => e.target.value).startWith(''),
+    guessButton$: DOM.select('.makeGuess').events('click'),
+    nextFlashcard$: DOM.select('.proceed').events('click'),
 
     enterKey$: keyPress$.filter(keyPressed('Enter')),
-    scroll$
+    scroll$,
+    transitionEnd$
   };
 }
 
-function main ({DOM}) {
+function makeGuess (guessText) {
+  return state => {
+    const flashcard = state.flashcards[state.flashcardReviewIndex + 1];
+
+    const newGuess = {
+      name: guessText,
+      score: calculateGuessScore(flashcard.staff_member.name, guessText),
+      flashcard
+    };
+
+    const stateUpdates = {
+      guesses: state.guesses.concat([newGuess]),
+      mode: 'madeGuess'
+    };
+
+    return Object.assign(
+      {},
+      state,
+      stateUpdates
+    );
+  };
+}
+
+function nextFlashcard () {
+  return state => {
+    const updatedFlashcardReviewIndex = state.flashcardReviewIndex + 1;
+
+    const stateUpdates = {
+      flashcardReviewIndex: updatedFlashcardReviewIndex,
+      flashcardsToReview: state.flashcards.slice(updatedFlashcardReviewIndex, updatedFlashcardReviewIndex + 3),
+      mode: 'readyToGuess'
+    };
+
+    return Object.assign(
+      {},
+      state,
+      stateUpdates
+    );
+  };
+}
+
+function handleEnterKey (text) {
+  return state => {
+    if (state.mode === 'readyToGuess') {
+      return makeGuess(text)(state);
+    } else if (state.mode === 'madeGuess') {
+      return nextFlashcard()(state);
+    }
+  };
+}
+
+function actions ({guessButton$, guessText$, nextFlashcard$, enterKey$}) {
+  return Rx.Observable.merge(
+    guessButton$.withLatestFrom(guessText$, (_, text) => makeGuess(text)),
+    nextFlashcard$.map(nextFlashcard),
+    enterKey$.withLatestFrom(guessText$, (_, text) => handleEnterKey(text))
+  );
+}
+
+function model (action$, flashcards) {
+  const initialState = {
+    flashcards,
+    flashcardsToReview: flashcards.slice(0, 3),
+    flashcardReviewIndex: 0,
+    guesses: [],
+    mode: 'readyToGuess'
+  };
+
+  const state$ = action$
+    .scan((state, action) => action(state), initialState)
+    .startWith(initialState)
+    .distinctUntilChanged();
+
+  const HTTP = state$.pluck('guesses')
+    .filter(guesses => guesses.length >= 1)
+    .map(_.last)
+    .distinctUntilChanged()
+    .map(makeGuessRequest);
+
   return {
-    DOM: view(model(intent(DOM)))
+    state$,
+    HTTP,
+    DOM: state$.map(view)
   };
 }
 
-$(() => {
-  const drivers = {
-    DOM: makeDOMDriver('#app')
-  };
-
-  Cycle.run(main, drivers);
-});
-
+module.exports = function Flashcards ({DOM}, props) {
+  return model(actions(intent(DOM)), props.flashcards);
+};
