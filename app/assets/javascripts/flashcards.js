@@ -1,7 +1,7 @@
 /* globals $ */
 
 const Cycle = require('@cycle/core');
-const {h, makeDOMDriver} = require('@cycle/dom');
+const {h} = require('@cycle/dom');
 const _ = require('lodash');
 
 const Rx = Cycle.Rx;
@@ -12,23 +12,21 @@ const sendGuessesToServer = require('./server/guesses');
 
 function log (label) { return (thing) => { console.log(label, thing); return thing; }; }
 
-function view ({state$}) {
+function view (state) {
   return (
-    state$.map(log('state')).map(({state, flashcards, guessResult, guessScore, guessInputValue}) => (
-      h('div.flashcards', [
-        flashcards.map((flashcard, index) => (
-          renderFlashcard(
-            flashcard,
-            index,
-            state === 'madeGuess' || index === 0,
-            guessResult,
-            guessScore.score,
-            guessInputValue
-          ))
-        )
-      ])
-    )
-  ));
+    h('div.flashcards', [
+      state.flashcardsToReview.map((flashcard, index) => (
+        renderFlashcard(
+          flashcard,
+          index,
+          state.mode === 'madeGuess' || index === 0,
+          state.guessResult,
+          _.last(state.guesses) && _.last(state.guesses).score,
+          state.guessInputValue
+        ))
+      )
+    ])
+  );
 }
 
 function focusSecondInput () {
@@ -60,7 +58,8 @@ function makeGuess (guessText) {
     };
 
     const stateUpdates = {
-      guesses: state.guesses.concat([newGuess])
+      guesses: state.guesses.concat([newGuess]),
+      mode: 'madeGuess'
     };
 
     return Object.assign(
@@ -73,10 +72,18 @@ function makeGuess (guessText) {
 
 function nextFlashcard () {
   return state => {
+    const updatedFlashcardReviewIndex = state.flashcardReviewIndex + 1;
+
+    const stateUpdates = {
+      flashcardReviewIndex: updatedFlashcardReviewIndex,
+      flashcardsToReview: state.flashcards.slice(updatedFlashcardReviewIndex, updatedFlashcardReviewIndex + 3),
+      mode: 'readyToGuess'
+    };
+
     return Object.assign(
       {},
       state,
-      {flashcardReviewIndex: state.flashcardReviewIndex + 1}
+      stateUpdates
     );
   };
 }
@@ -96,8 +103,10 @@ function makeGuessRequest (guess) {
 function model ({guessButton$, guessText$, nextFlashcard$}, flashcards) {
   const initialState = {
     flashcards,
+    flashcardsToReview: flashcards.slice(0, 3),
     flashcardReviewIndex: 0,
-    guesses: []
+    guesses: [],
+    mode: 'readyToGuess'
   };
 
   const action$ = Rx.Observable.merge(
@@ -108,23 +117,18 @@ function model ({guessButton$, guessText$, nextFlashcard$}, flashcards) {
   const state$ = action$
     .scan((state, action) => action(state), initialState)
     .startWith(initialState)
-    .map(state => {
-      return Object.assign(
-        {},
-        state,
-        {flashcardsToReview: state.flashcards.slice(state.flashcardReviewIndex, state.flashcardReviewIndex + 3)}
-      );
-    })
     .distinctUntilChanged();
 
   const HTTP = state$.pluck('guesses')
     .filter(guesses => guesses.length >= 1)
     .map(_.last)
+    .distinctUntilChanged()
     .map(makeGuessRequest);
 
   return {
     state$,
-    HTTP
+    HTTP,
+    DOM: state$.map(view)
   };
 }
 
@@ -152,6 +156,6 @@ function intent (DOM) {
   };
 }
 
-module.exports = function Flashcards ({DOM, props}) {
+module.exports = function Flashcards ({DOM}, props) {
   return model(intent(DOM), props.flashcards);
 }

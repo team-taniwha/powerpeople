@@ -136,7 +136,7 @@ describe('the flashcard app', () => {
     });
 
     const results = scheduler.startScheduler(() => {
-      return Flashcards({DOM: mockedResponse, props}).state$.pluck('flashcardsToReview').pluck('length');
+      return Flashcards({DOM: mockedResponse}, props).state$.pluck('flashcardsToReview').pluck('length');
     });
 
     collectionAssert.assertEqual([
@@ -175,7 +175,7 @@ describe('the flashcard app', () => {
     });
 
     const results = scheduler.startScheduler(() => {
-      return Flashcards({DOM: mockedResponse, props}).state$.pluck('flashcardsToReview').map(f => f.map(card => card.staff_member.name))
+      return Flashcards({DOM: mockedResponse}, props).state$.pluck('flashcardsToReview').map(f => f.map(card => card.staff_member.name))
     });
 
     collectionAssert.assertEqual([
@@ -185,6 +185,45 @@ describe('the flashcard app', () => {
     ], results.messages);
   });
 
+  it('changes mode as expected', () => {
+    const scheduler = new Rx.TestScheduler();
+
+    const input$ = scheduler.createHotObservable(
+      onNext(250, {target: {value: 'Dane Buck'}})
+    );
+
+    const makeGuess$ = scheduler.createHotObservable(
+      onNext(300, {})
+    );
+
+    const nextCard$ = scheduler.createHotObservable(
+      onNext(350, {})
+    );
+
+    const mockedResponse = mockDOMResponse({
+      '.guess': {
+        'input': input$
+      },
+
+      '.makeGuess': {
+        'click': makeGuess$
+      },
+
+      '.proceed': {
+        'click': nextCard$
+      }
+    });
+
+    const results = scheduler.startScheduler(() => {
+      return Flashcards({DOM: mockedResponse}, props).state$.pluck('mode');
+    });
+
+    collectionAssert.assertEqual([
+      onNext(200, 'readyToGuess'),
+      onNext(300, 'madeGuess'),
+      onNext(350, 'readyToGuess')
+    ], results.messages);
+  });
   it('submits guesses to the server', () => {
     const scheduler = new Rx.TestScheduler();
 
@@ -207,7 +246,7 @@ describe('the flashcard app', () => {
     });
 
     const results = scheduler.startScheduler(() => {
-      return Flashcards({DOM: mockedResponse, props}).HTTP;
+      return Flashcards({DOM: mockedResponse}, props).HTTP;
     });
 
     collectionAssert.assertEqual([
