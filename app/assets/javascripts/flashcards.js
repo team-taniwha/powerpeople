@@ -1,6 +1,5 @@
 /* globals $ */
 
-const Cycle = require('@cycle/core');
 const {h} = require('@cycle/dom');
 const _ = require('lodash');
 
@@ -8,7 +7,6 @@ const Rx = require('rx');
 
 const renderFlashcard = require('./views/flashcard');
 const calculateGuessScore = require('./calculations/guess-score');
-const sendGuessesToServer = require('./server/guesses');
 
 function log (label) { return (thing) => { console.log(label, thing); return thing; }; }
 
@@ -50,11 +48,12 @@ function dirtySideEffects (scroll$, stateReadyToGuess$) {
 function makeGuessRequest (guess) {
   return {
     url: '/flashcards/' + guess.flashcard.id,
-    method: 'POST',
-    dataType: 'JSON',
-    data: {
+    method: 'PUT',
+    type: 'application/json',
+    send: {
       recollection_quality: guess.score,
-      _method: 'PUT'
+      _method: 'PUT',
+      authenticity_token: global.authenticity_token
     }
   };
 }
@@ -169,7 +168,6 @@ function model (action$, flashcards) {
   };
 }
 
-
 module.exports = function Flashcards ({DOM}, props) {
   return model(actions(intent(DOM)), props.flashcards);
-}
+};

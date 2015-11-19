@@ -11,6 +11,8 @@ const subscribe = Rx.ReactiveTest.subscribe;
 
 const Flashcards = require('../../app/assets/javascripts/flashcards');
 
+global.authenticity_token = "swordfish";
+
 Rx.Observable.fromEvent = (_element, selector) => {
   return Rx.Observable.empty();
 }
@@ -294,9 +296,9 @@ describe('the flashcard app', () => {
     collectionAssert.assertEqual([
       onNext(300, {
         url: '/flashcards/251',
-        method: 'POST',
-        dataType: 'JSON',
-        data: {recollection_quality: 3, _method: 'PUT'}
+        method: 'PUT',
+        type: 'application/json',
+        send: {recollection_quality: 3, _method: 'PUT', authenticity_token: 'swordfish'}
       })
     ], results.messages);
   });
