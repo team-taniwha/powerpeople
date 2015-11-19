@@ -12,6 +12,8 @@ const subscribe = Rx.ReactiveTest.subscribe;
 const Flashcards = require('../../app/assets/javascripts/flashcards');
 
 global.authenticity_token = "swordfish";
+global.document = {};
+global.scroll = () => {};
 
 Rx.Observable.fromEvent = (_element, selector) => {
   return Rx.Observable.empty();

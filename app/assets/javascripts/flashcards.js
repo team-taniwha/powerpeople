@@ -27,22 +27,12 @@ function view (state) {
   );
 }
 
-function focusSecondInput () {
-  const secondInput = $('input').select(1);
-
-  if (secondInput) {
-    secondInput.focus();
-  }
-}
-
 function scrollToTop () {
   scroll(0, 0);
 }
 
-function dirtySideEffects (scroll$, stateReadyToGuess$) {
-  stateReadyToGuess$.delay(900).forEach(focusSecondInput);
-
-  scroll$.sample(Rx.Observable.interval(100)).forEach(scrollToTop);
+function dirtySideEffects () {
+  Rx.Observable.interval(50).forEach(scrollToTop);
 }
 
 function makeGuessRequest (guess) {
@@ -96,6 +86,8 @@ function makeGuess (guessText) {
       guesses: state.guesses.concat([newGuess]),
       mode: 'madeGuess'
     };
+
+    dirtySideEffects();
 
     return Object.assign(
       {},
@@ -169,5 +161,7 @@ function model (action$, flashcards) {
 }
 
 module.exports = function Flashcards ({DOM}, props) {
+  dirtySideEffects();
+
   return model(actions(intent(DOM)), props.flashcards);
 };
