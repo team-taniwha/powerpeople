@@ -149,11 +149,15 @@ describe('the flashcard app', () => {
     const scheduler = new Rx.TestScheduler();
 
     const input$ = scheduler.createHotObservable(
-      onNext(250, {target: {value: 'Dane Buck'}})
+      onNext(250, {target: {value: 'Wilmer'}})
     );
 
     const makeGuess$ = scheduler.createHotObservable(
       onNext(300, {})
+    );
+
+    const nextCard$ = scheduler.createHotObservable(
+      onNext(350, {})
     );
 
     const mockedResponse = mockDOMResponse({
@@ -163,16 +167,21 @@ describe('the flashcard app', () => {
 
       '.makeGuess': {
         'click': makeGuess$
+      },
+
+      '.proceed': {
+        'click': nextCard$
       }
     });
 
     const results = scheduler.startScheduler(() => {
-      return Flashcards({DOM: mockedResponse, props}).state$.pluck('flashcardsToReview').map(f => f[1].staff_member.name)
+      return Flashcards({DOM: mockedResponse, props}).state$.pluck('flashcardsToReview').map(f => f.map(card => card.staff_member.name))
     });
 
     collectionAssert.assertEqual([
-      onNext(200, 'Dane Buchanan'),
-      onNext(300, 'Dan Lee')
+      onNext(200, ['Fred', 'Wilma', 'Dino']),
+      onNext(300, ['Fred', 'Wilma', 'Dino']),
+      onNext(350, ['Wilma', 'Dino', 'Baby Puss'])
     ], results.messages);
   });
 
@@ -180,7 +189,7 @@ describe('the flashcard app', () => {
     const scheduler = new Rx.TestScheduler();
 
     const input$ = scheduler.createHotObservable(
-      onNext(250, {target: {value: 'Dane Buck'}})
+      onNext(250, {target: {value: 'Wilmer'}})
     );
 
     const makeGuess$ = scheduler.createHotObservable(

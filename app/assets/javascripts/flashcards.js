@@ -60,14 +60,23 @@ function makeGuess (guessText) {
     };
 
     const stateUpdates = {
-      flashcardReviewIndex: state.flashcardReviewIndex + 1,
       guesses: state.guesses.concat([newGuess])
-    }
+    };
 
     return Object.assign(
       {},
       state,
       stateUpdates
+    );
+  };
+}
+
+function nextFlashcard () {
+  return state => {
+    return Object.assign(
+      {},
+      state,
+      {flashcardReviewIndex: state.flashcardReviewIndex + 1}
     );
   };
 }
@@ -81,20 +90,19 @@ function makeGuessRequest (guess) {
       recollection_quality: guess.score,
       _method: 'PUT'
     }
-  }
+  };
 }
 
-function model ({guessButton$, guessText$}, flashcards) {
+function model ({guessButton$, guessText$, nextFlashcard$}, flashcards) {
   const initialState = {
     flashcards,
     flashcardReviewIndex: 0,
     guesses: []
   };
 
-  const makeGuess$ = guessButton$.map(makeGuess);
-
   const action$ = Rx.Observable.merge(
-    makeGuess$.withLatestFrom(guessText$, (_, text) => makeGuess(text))
+    guessButton$.withLatestFrom(guessText$, (_, text) => makeGuess(text)),
+    nextFlashcard$.map(nextFlashcard)
   );
 
   const state$ = action$
