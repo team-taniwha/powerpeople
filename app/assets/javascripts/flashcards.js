@@ -4,6 +4,8 @@ const Cycle = require('@cycle/core');
 const {h, makeDOMDriver} = require('@cycle/dom');
 const _ = require('lodash');
 
+const Rx = Cycle.Rx;
+
 const renderFlashcard = require('./views/flashcard');
 const calculateGuessScore = require('./calculations/guess-score');
 const sendGuessesToServer = require('./server/guesses');
@@ -33,7 +35,6 @@ function focusSecondInput () {
   const secondInput = $('input').get(1);
 
   if (secondInput) {
-    console.log('focusing', secondInput);
     secondInput.focus();
   }
 }
@@ -43,65 +44,12 @@ function scrollToTop () {
 }
 
 function dirtySideEffects (scroll$, stateReadyToGuess$) {
-  stateReadyToGuess$.delay(900).forEach(focusSecondInput);
+  stateReadyToGuess$.delay(2000).forEach(focusSecondInput);
 
   scroll$.sample(Cycle.Rx.Observable.interval(100)).forEach(scrollToTop);
 }
 
-function model ({guessValue$, guessButton$, nextFlashcard$, enterKey$, scroll$}) {
-  const states = [
-    'readyToGuess',
-    'madeGuess'
-  ];
-
-  const progressState$ = Cycle.Rx.Observable.merge(
-    guessButton$.map(_ => 'guessClick'),
-    nextFlashcard$.map(_ => 'nextClick'),
-    enterKey$.map(_ => 'enter')
-  );
-
-  const state$ = progressState$.scan((currentState, __) => {
-    const currentStateIndex = _.findIndex(states, state => state === currentState);
-
-    return states[(currentStateIndex + 1) % states.length];
-  }, 'readyToGuess').startWith('readyToGuess');
-
-  const stateReadyToGuess$ = state$.filter(state => state === 'readyToGuess');
-  const stateMadeGuess$ = state$.filter(state => state === 'madeGuess');
-
-  const flashcard$ = Cycle.Rx.Observable.from(window.flashcards)
-    .concat(Cycle.Rx.Observable.never());
-
-  const flashcards$ = Cycle.Rx.Observable.zip(
-    flashcard$,
-    flashcard$.skip(1),
-    flashcard$.skip(2)
-   ).zip(stateReadyToGuess$, (flashcards, _) => flashcards)
-    .startWith([{}, {staff_member: {name: ''}}, {}]);
-
-  const guess$ = stateMadeGuess$
-    .withLatestFrom(guessValue$, (_, guess) => ({name: guess}));
-
-  dirtySideEffects(scroll$, stateReadyToGuess$);
-
-  const guessScore$ = guess$.withLatestFrom(flashcards$, (guess, flashcards) => {
-    return {
-      flashcardId: flashcards[1].id,
-      score: calculateGuessScore(guess.name, flashcards[1].staff_member.name)
-    };
-  });
-
-  sendGuessesToServer(guessScore$.map(log('submittedScore')));
-
-  return {
-    state$: state$.withLatestFrom(
-      guess$,
-      guessScore$,
-      flashcards$,
-      stateReadyToGuess$.map(_ => ''),
-      (state, guessResult, guessScore, flashcards, guessInputValue) => ({state, guessResult, guessScore, flashcards, guessInputValue})
-    ).map(log('modelState')).startWith({state: 'readyToGuess', flashcards: window.flashcards.slice(0, 3), guessScore: {name: 'fgsfdg'}, guessResult: {score: 3}})
-  };
+function model ({}) {
 }
 
 function keyPressed (key) {
@@ -109,8 +57,13 @@ function keyPressed (key) {
 }
 
 function intent (DOM) {
-  const keyPress$ = Cycle.Rx.Observable.fromEvent(document.body, 'keypress').map(log('keypress'));
+  const keyPress$ = Cycle.Rx.Observable.fromEvent(document.body, 'keypress');
   const scroll$ = Cycle.Rx.Observable.fromEvent(document, 'scroll');
+
+  const transitionEnd$ = Cycle.Rx.Observable.merge(
+    DOM.select(':root').events('transitionend'),
+    DOM.select(':root').events('webkitTransitionEnd')
+  );
 
   return {
     guessValue$: DOM.get('.guess', 'input').map(e => e.target.value).startWith(''),
@@ -118,21 +71,13 @@ function intent (DOM) {
     nextFlashcard$: DOM.get('.proceed', 'click'),
 
     enterKey$: keyPress$.filter(keyPressed('Enter')),
-    scroll$
+    scroll$,
+    transitionEnd$
   };
 }
 
-function main ({DOM}) {
+module.exports = function Flashcards ({DOM}) {
   return {
     DOM: view(model(intent(DOM)))
   };
 }
-
-$(() => {
-  const drivers = {
-    DOM: makeDOMDriver('#app')
-  };
-
-  Cycle.run(main, drivers);
-});
-

@@ -15,5 +15,12 @@
   "license": "MIT",
   "engines": {
     "node": ">= 5.0.0"
+  },
+  "devDependencies": {
+    "mocha": "^2.3.4"
+  },
+  "scripts": {
+    "test": "mocha spec/javascripts --compilers js:babel-core/register",
+    "autotest": "mocha spec/javascripts --compilers js:babel-core/register --watch -R min"
   }
 }
