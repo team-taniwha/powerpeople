@@ -32,7 +32,7 @@ function view ({state$}) {
 }
 
 function focusSecondInput () {
-  const secondInput = $('input').get(1);
+  const secondInput = $('input').select(1);
 
   if (secondInput) {
     secondInput.focus();
@@ -57,8 +57,8 @@ function keyPressed (key) {
 }
 
 function intent (DOM) {
-  const keyPress$ = Cycle.Rx.Observable.fromEvent(document.body, 'keypress');
-  const scroll$ = Cycle.Rx.Observable.fromEvent(document, 'scroll');
+  const keyPress$ = DOM.select('flashcards').events('keypress');
+  const scroll$ = DOM.select('flashcards').events('scroll');
 
   const transitionEnd$ = Cycle.Rx.Observable.merge(
     DOM.select(':root').events('transitionend'),
@@ -66,9 +66,9 @@ function intent (DOM) {
   );
 
   return {
-    guessValue$: DOM.get('.guess', 'input').map(e => e.target.value).startWith(''),
-    guessButton$: DOM.get('.makeGuess', 'click'),
-    nextFlashcard$: DOM.get('.proceed', 'click'),
+    guessValue$: DOM.select('.guess').events('input').map(e => e.tarselect.value).startWith(''),
+    guessButton$: DOM.select('.makeGuess').events('click'),
+    nextFlashcard$: DOM.select('.proceed').events('click'),
 
     enterKey$: keyPress$.filter(keyPressed('Enter')),
     scroll$,
@@ -76,8 +76,12 @@ function intent (DOM) {
   };
 }
 
-module.exports = function Flashcards ({DOM}) {
+module.exports = function Flashcards ({DOM, props}) {
+  const initialState = {
+    flashcards: props.flashcards.slice(0, 3)
+  };
+
   return {
-    DOM: view(model(intent(DOM)))
+    state$: Rx.Observable.just(initialState)
   };
 }
