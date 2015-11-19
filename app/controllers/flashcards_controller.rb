@@ -7,7 +7,7 @@ class FlashcardsController < ApplicationController
     end
 
     @flashcards = current_user.flashcards
-      .sort_by { |flashcard| flashcard.due || Time.now }
+      .sort_by { |flashcard| flashcard.due || Time.new(0) }
   end
 
   def update
