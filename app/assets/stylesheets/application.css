@@ -28,15 +28,6 @@ header {
   box-shadow: 0px 5px 5px lightgray;
 }
 
-.title {
-  margin: 0 auto;
-  padding: 6px;
-  height: 40px;
-  width: 240px;
-  background: url(/assets/power_people_white.png) 0 center no-repeat;
-  background-size: 250px 76px;
-}
-
 html {
   font-family: omnes-pro, Helvetica;
   min-height: 100%;
