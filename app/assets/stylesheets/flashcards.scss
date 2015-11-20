@@ -99,23 +99,24 @@ body {
     margin-bottom: 15px;
   }
 
-  .score-1 {
-    color: darken($pink, 40%);
-  }
+.score-1 {
+  color: darken($pink, 40%);
+}
 
-  .score-2 {
-    color: darken($pink, 30%);
-  }
+.score-2 {
+  color: darken($pink, 30%);
+}
 
-  .score-3 {
-    color: darken($pink, 20%);
-  }
+.score-3 {
+  color: darken($pink, 20%);
+}
 
 .score-4 {
   color: darken($pink, 10%);
 }
 
 .score-5 {
+  animation: fancy 0.3s 2;
   color: darken($pink, 0%);
 }
 
@@ -170,4 +171,25 @@ button:hover {
 button:active {
   position:relative;
   top:1px;
+}
+
+@keyframes fancy {
+
+  0% {
+    transform: translate3d(0px, 0px, 0px);
+    font-size: 100%;
+    animation-timing-function: ease-in;
+  }
+
+  50% {
+    transform: translate3d(0px, -10px, 0px);
+    font-size: 150%;
+    animation-timing-function: ease-out;
+  }
+
+  100% {
+    transform: translate3d(0px, 0px, 0px);
+    font-size: 100%;
+  }
+
 }
