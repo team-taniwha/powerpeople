@@ -3,6 +3,8 @@
 // You can use Sass (SCSS) here: http://sass-lang.com/
 
 $pink: #FA0E6A;
+$white: #FFFFFF;
+$grey: #7D7D7D;
 
 body {
   background: #EFEFEF;
@@ -20,20 +22,25 @@ body {
 
   max-width: 400px;
   min-width: 300px;
-  margin: 30px auto;
+  margin: 50px auto;
 
   padding: 50px 10px;
-  background: #FFF;
+  background: $white;
   text-align: center;
 
   box-shadow: 0px 5px 5px lightgray;
 
   img {
-    margin: 30px;
+    margin: 20px 20px 0 20px;
     width: 200px;
     height: 200px;
   }
+
   z-index: -1;
+}
+
+.staff-position {
+  color: $grey;
 }
 
 .position-0 {
@@ -58,23 +65,39 @@ body {
 
 .more-info {
   display: none;
-}
 
-.recollection-buttons {
-  margin-top: 20px;
+  div {
+    padding: 6px;
 
-  form {
-    display: inline;
-    margin: 3px;
+    h2.staff-member-name {
+      margin: 0;
+      margin-top: 8px;
+      font-size: 2em;
+    }
+
+    h3.staff-member-position {
+      margin: 0;
+      font-size: 1em;
+      color: $grey;
+    }
   }
-}
+ }
 
-.name {
-  text-align: center;
-  font-size: 2em;
-  padding: 2px;
-  margin-bottom: 15px;
-}
+  .recollection-buttons {
+    margin-top: 20px;
+
+    form {
+      display: inline;
+      margin: 3px;
+    }
+  }
+
+  .name {
+    text-align: center;
+    font-size: 2em;
+    padding: 2px;
+    margin-bottom: 15px;
+  }
 
 .score-1 {
   color: darken($pink, 40%);
@@ -93,6 +116,7 @@ body {
 }
 
 .score-5 {
+  animation: fancy 0.3s 2;
   color: darken($pink, 0%);
 }
 
@@ -101,29 +125,71 @@ body {
   margin-top: -2px;
 }
 
-button {
-  background-color: $pink;
-  border-radius: 23px;
+input[type="text"] {
+  border: 1px solid #eee;
+  margin: 10px;
+  padding: 5px;
+  transition: all .2s;
+}
 
-  border: 1px solid darken($pink, 10%);
+input[type="text"]:focus {
+  border-color: #dddddd;
+  outline: 0;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 4px $grey;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 4px $grey;
+}  
+
+
+button {
+  background-color: $white;
+  border-radius: 25px;
+
+  border: 1px solid $pink;
   display: inline-block;
   cursor: pointer;
-  color: #ffffff;
-  font-family: Helvetica;
+  color: $pink;
   font-size: 23px;
-  padding: 12px 25px;
+  font-weight: 300px;
+  padding: 12px 40px;
   text-decoration: none;
-  text-shadow: 0px 1px 0px #2f6627;
+
+  transition-delay: 0s;
+  transition-duration: 0.2s;
+  transition-property: background-color;
+  transition-timing-function: ease;
 }
 
 .clicked {
-  background-color: darken($pink, 20%);
+  background-color: $pink;
+  color: $white;
 }
 
 button:hover {
-  background-color: darken($pink, 20%);
+  background-color: $pink;
+  color: $white
 }
 button:active {
   position:relative;
   top:1px;
+}
+
+@keyframes fancy {
+
+  0% {
+    transform: translate3d(0px, 0px, 0px);
+    font-size: 100%;
+    animation-timing-function: ease-in;
+  }
+
+  50% {
+    transform: translate3d(0px, -10px, 0px);
+    font-size: 150%;
+    animation-timing-function: ease-out;
+  }
+
+  100% {
+    transform: translate3d(0px, 0px, 0px);
+    font-size: 100%;
+  }
+
 }
