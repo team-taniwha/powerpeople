@@ -104,7 +104,8 @@ function nextFlashcard () {
     const stateUpdates = {
       flashcardReviewIndex: updatedFlashcardReviewIndex,
       flashcardsToReview: state.flashcards.slice(updatedFlashcardReviewIndex, updatedFlashcardReviewIndex + 3),
-      mode: 'transitioning'
+      mode: 'transitioning',
+      guessInputValue: ''
     };
 
     return Object.assign(
@@ -144,12 +145,27 @@ function transitionEnd () {
   };
 }
 
+function updateGuessInput (text) {
+  return function updateGuessInputValue (state) {
+    const stateUpdates = {
+      guessInputValue: text
+    };
+
+    return Object.assign(
+      {},
+      state,
+      stateUpdates
+    );
+  };
+}
+
 function actions ({guessButton$, guessText$, nextFlashcard$, enterKey$, transitionEnd$}) {
   return Rx.Observable.merge(
     guessButton$.withLatestFrom(guessText$, (_, text) => makeGuess(text)),
     nextFlashcard$.map(nextFlashcard),
     enterKey$.withLatestFrom(guessText$, (_, text) => handleEnterKey(text)),
-    transitionEnd$.map(transitionEnd)
+    transitionEnd$.map(transitionEnd),
+    guessText$.map(updateGuessInput)
   );
 }
 

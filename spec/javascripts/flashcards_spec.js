@@ -144,7 +144,9 @@ describe('the flashcard app', () => {
     });
 
     const results = scheduler.startScheduler(() => {
-      return Flashcards({DOM: mockedResponse}, props).state$.pluck('flashcardsToReview').pluck('length');
+      return Flashcards({DOM: mockedResponse}, props)
+        .state$.pluck('flashcardsToReview').pluck('length')
+        .distinctUntilChanged();
     });
 
     collectionAssert.assertEqual([
@@ -183,12 +185,13 @@ describe('the flashcard app', () => {
     });
 
     const results = scheduler.startScheduler(() => {
-      return Flashcards({DOM: mockedResponse}, props).state$.pluck('flashcardsToReview').map(f => f.map(card => card.staff_member.name))
+      return Flashcards({DOM: mockedResponse}, props)
+        .state$.pluck('flashcardsToReview').map(f => f.map(card => card.staff_member.name))
+        .distinctUntilChanged()
     });
 
     collectionAssert.assertEqual([
       onNext(200, ['Fred', 'Wilma', 'Dino']),
-      onNext(300, ['Fred', 'Wilma', 'Dino']),
       onNext(350, ['Wilma', 'Dino', 'Baby Puss'])
     ], results.messages);
   });
@@ -220,12 +223,13 @@ describe('the flashcard app', () => {
     });
 
     const results = scheduler.startScheduler(() => {
-      return Flashcards({DOM: mockedResponse}, props).state$.pluck('flashcardsToReview').map(f => f.map(card => card.staff_member.name));
+      return Flashcards({DOM: mockedResponse}, props)
+        .state$.pluck('flashcardsToReview').map(f => f.map(card => card.staff_member.name))
+        .distinctUntilChanged()
     });
 
     collectionAssert.assertEqual([
       onNext(200, ['Fred', 'Wilma', 'Dino']),
-      onNext(300, ['Fred', 'Wilma', 'Dino']),
       onNext(350, ['Wilma', 'Dino', 'Baby Puss'])
     ], results.messages);
   });
@@ -268,7 +272,7 @@ describe('the flashcard app', () => {
     });
 
     const results = scheduler.startScheduler(() => {
-      return Flashcards({DOM: mockedResponse}, props).state$.pluck('mode');
+      return Flashcards({DOM: mockedResponse}, props).state$.pluck('mode').distinctUntilChanged();
     });
 
     collectionAssert.assertEqual([
