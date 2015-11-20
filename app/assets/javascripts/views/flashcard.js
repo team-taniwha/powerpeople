@@ -104,9 +104,9 @@ function renderNewBadge(flashcard) {
         truespeed: true
       }
     }, [
-      h('img', {
+      h('img.new-staff-member', {
         attributes: {
-          src: "/assets/new"
+          src: window.newStaffMemberImagePath
         }
       })
     ])
