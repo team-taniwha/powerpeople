@@ -73,7 +73,7 @@ function intent (DOM) {
 }
 
 function makeGuess (guessText) {
-  return state => {
+  return function guess (state) {
     const flashcard = state.flashcards[state.flashcardReviewIndex + 1];
 
     const newGuess = {
@@ -98,7 +98,7 @@ function makeGuess (guessText) {
 }
 
 function nextFlashcard () {
-  return state => {
+  return function goToNextFlashcard (state) {
     const updatedFlashcardReviewIndex = state.flashcardReviewIndex + 1;
 
     const stateUpdates = {
@@ -116,7 +116,7 @@ function nextFlashcard () {
 }
 
 function handleEnterKey (text) {
-  return state => {
+  return function enterKeyPressed (state) {
     if (state.mode === 'readyToGuess') {
       return makeGuess(text)(state);
     } else if (state.mode === 'madeGuess') {
@@ -128,7 +128,10 @@ function handleEnterKey (text) {
 }
 
 function transitionEnd () {
-  return state => {
+  return function endTransition (state) {
+    if (state.mode !== 'transitioning') {
+      return state;
+    }
     const stateUpdates = {
       mode: 'readyToGuess'
     };
