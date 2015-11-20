@@ -193,3 +193,15 @@ button:active {
   }
 
 }
+
+.new-badge {
+  width: 260px;
+  height: 265px;
+  margin-bottom: -270px;
+
+  img {
+    width: 60px;
+    height: 60px;
+    opacity: 0.75;
+  }
+}
