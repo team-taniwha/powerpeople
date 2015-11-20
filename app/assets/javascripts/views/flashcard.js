@@ -1,6 +1,10 @@
 const {h} = require('@cycle/dom');
 const FocusHook = require('virtual-dom/virtual-hyperscript/hooks/focus-hook');
+const calculateGuessScore = require('../calculations/guess-score');
 
+const Color = require('color');
+
+const natural = require('natural');
 function guessMessage (score) {
   if (score === 5) {
     return 'Perfect!';
@@ -34,10 +38,16 @@ function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessResult
 }
 
 function renderFlashcard (flashcard, index, showMoreInformation, guessResult, guessScore, guessValue) {
+
   let guessInputProperties = {type: 'text', value: guessValue};
 
-  if (index == 1) {
+  if (index === 1) {
+    const score = natural.JaroWinklerDistance(guessValue || '', flashcard.staff_member.name)
+
     guessInputProperties['focus-hook'] = new FocusHook();
+    guessInputProperties.style = {
+      color: Color('#FA0E6A').darken(1 - score).hslString()
+    }
   }
   return (
     h(`.flashcard.position-${index}`, {key: flashcard.id}, [
