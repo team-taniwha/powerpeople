@@ -27,22 +27,12 @@ function view (state) {
   );
 }
 
-function focusSecondInput () {
-  const secondInput = $('input').select(1);
-
-  if (secondInput) {
-    secondInput.focus();
-  }
-}
-
 function scrollToTop () {
   scroll(0, 0);
 }
 
-function dirtySideEffects (scroll$, stateReadyToGuess$) {
-  stateReadyToGuess$.delay(900).forEach(focusSecondInput);
-
-  scroll$.sample(Rx.Observable.interval(100)).forEach(scrollToTop);
+function dirtySideEffects () {
+  Rx.Observable.interval(50).forEach(scrollToTop);
 }
 
 function makeGuessRequest (guess) {
@@ -97,6 +87,8 @@ function makeGuess (guessText) {
       mode: 'madeGuess'
     };
 
+    dirtySideEffects();
+
     return Object.assign(
       {},
       state,
@@ -112,7 +104,7 @@ function nextFlashcard () {
     const stateUpdates = {
       flashcardReviewIndex: updatedFlashcardReviewIndex,
       flashcardsToReview: state.flashcards.slice(updatedFlashcardReviewIndex, updatedFlashcardReviewIndex + 3),
-      mode: 'readyToGuess'
+      mode: 'transitioning'
     };
 
     return Object.assign(
@@ -130,14 +122,31 @@ function handleEnterKey (text) {
     } else if (state.mode === 'madeGuess') {
       return nextFlashcard()(state);
     }
+
+    return state;
   };
 }
 
-function actions ({guessButton$, guessText$, nextFlashcard$, enterKey$}) {
+function transitionEnd () {
+  return state => {
+    const stateUpdates = {
+      mode: 'readyToGuess'
+    };
+
+    return Object.assign(
+      {},
+      state,
+      stateUpdates
+    );
+  };
+}
+
+function actions ({guessButton$, guessText$, nextFlashcard$, enterKey$, transitionEnd$}) {
   return Rx.Observable.merge(
     guessButton$.withLatestFrom(guessText$, (_, text) => makeGuess(text)),
     nextFlashcard$.map(nextFlashcard),
-    enterKey$.withLatestFrom(guessText$, (_, text) => handleEnterKey(text))
+    enterKey$.withLatestFrom(guessText$, (_, text) => handleEnterKey(text)),
+    transitionEnd$.map(transitionEnd)
   );
 }
 
@@ -169,5 +178,7 @@ function model (action$, flashcards) {
 }
 
 module.exports = function Flashcards ({DOM}, props) {
+  dirtySideEffects();
+
   return model(actions(intent(DOM)), props.flashcards);
 };

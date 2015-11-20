@@ -1,4 +1,5 @@
 const {h} = require('@cycle/dom');
+const FocusHook = require('virtual-dom/virtual-hyperscript/hooks/focus-hook');
 
 function guessMessage (score) {
   if (score === 5) {
@@ -30,13 +31,18 @@ function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessResult
 }
 
 function renderFlashcard (flashcard, index, showMoreInformation, guessResult, guessScore, guessValue) {
+  let guessInputProperties = {type: 'text', value: guessValue};
+
+  if (index == 1) {
+    guessInputProperties['focus-hook'] = new FocusHook();
+  }
   return (
     h(`.flashcard.position-${index}`, {key: flashcard.id}, [
       h('img', {attributes: {src: flashcard.staff_member.image_url}}),
 
       h('div', {attributes: displayIf(!showMoreInformation)}, [
         h('div', [
-          h('input.guess.name', {type: 'text', value: guessValue})
+          h('input.guess.name', guessInputProperties)
         ]),
 
         h('div', [

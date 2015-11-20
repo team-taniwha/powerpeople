@@ -12,6 +12,8 @@ const subscribe = Rx.ReactiveTest.subscribe;
 const Flashcards = require('../../app/assets/javascripts/flashcards');
 
 global.authenticity_token = "swordfish";
+global.document = {};
+global.scroll = () => {};
 
 Rx.Observable.fromEvent = (_element, selector) => {
   return Rx.Observable.empty();
@@ -243,6 +245,10 @@ describe('the flashcard app', () => {
       onNext(350, {})
     );
 
+    const transitionEnd$ = scheduler.createHotObservable(
+      onNext(400, {})
+    );
+
     const mockedResponse = mockDOMResponse({
       '.guess': {
         'input': input$
@@ -254,6 +260,10 @@ describe('the flashcard app', () => {
 
       '.proceed': {
         'click': nextCard$
+      },
+
+      ':root': {
+        'transitionend': transitionEnd$
       }
     });
 
@@ -264,7 +274,8 @@ describe('the flashcard app', () => {
     collectionAssert.assertEqual([
       onNext(200, 'readyToGuess'),
       onNext(300, 'madeGuess'),
-      onNext(350, 'readyToGuess')
+      onNext(350, 'transitioning'),
+      onNext(400, 'readyToGuess')
     ], results.messages);
   });
 
