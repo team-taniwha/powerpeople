@@ -7,6 +7,7 @@ const Rx = require('rx');
 
 const renderFlashcard = require('./views/flashcard');
 const calculateGuessScore = require('./calculations/guess-score');
+const natural = require('natural');
 
 function log (label) { return (thing) => { console.log(label, thing); return thing; }; }
 
@@ -18,8 +19,7 @@ function view (state) {
           flashcard,
           index,
           state.mode === 'madeGuess' || index === 0,
-          state.guessResult,
-          _.last(state.guesses) && _.last(state.guesses).score,
+          _.last(state.guesses) || {score: 0, distance: 1000, flashcard: {staff_member: {name: ''}}},
           state.guessInputValue
         ))
       )
@@ -79,7 +79,8 @@ function makeGuess (guessText) {
     const newGuess = {
       name: guessText,
       score: calculateGuessScore(flashcard.staff_member.name, guessText),
-      flashcard
+      flashcard,
+      distance: natural.JaroWinklerDistance(flashcard.staff_member.name, guessText)
     };
 
     const stateUpdates = {
