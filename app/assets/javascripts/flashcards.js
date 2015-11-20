@@ -7,6 +7,7 @@ const Rx = require('rx');
 
 const renderFlashcard = require('./views/flashcard');
 const calculateGuessScore = require('./calculations/guess-score');
+const natural = require('natural');
 
 function log (label) { return (thing) => { console.log(label, thing); return thing; }; }
 
@@ -18,8 +19,7 @@ function view (state) {
           flashcard,
           index,
           state.mode === 'madeGuess' || index === 0,
-          state.guessResult,
-          _.last(state.guesses) && _.last(state.guesses).score,
+          _.last(state.guesses) || {score: 0, distance: 1000, flashcard: {staff_member: {name: ''}}},
           state.guessInputValue
         ))
       )
@@ -73,13 +73,14 @@ function intent (DOM) {
 }
 
 function makeGuess (guessText) {
-  return state => {
+  return function guess (state) {
     const flashcard = state.flashcards[state.flashcardReviewIndex + 1];
 
     const newGuess = {
       name: guessText,
       score: calculateGuessScore(flashcard.staff_member.name, guessText),
-      flashcard
+      flashcard,
+      distance: natural.JaroWinklerDistance(flashcard.staff_member.name, guessText)
     };
 
     const stateUpdates = {
@@ -98,13 +99,14 @@ function makeGuess (guessText) {
 }
 
 function nextFlashcard () {
-  return state => {
+  return function goToNextFlashcard (state) {
     const updatedFlashcardReviewIndex = state.flashcardReviewIndex + 1;
 
     const stateUpdates = {
       flashcardReviewIndex: updatedFlashcardReviewIndex,
       flashcardsToReview: state.flashcards.slice(updatedFlashcardReviewIndex, updatedFlashcardReviewIndex + 3),
-      mode: 'transitioning'
+      mode: 'transitioning',
+      guessInputValue: ''
     };
 
     return Object.assign(
@@ -116,7 +118,7 @@ function nextFlashcard () {
 }
 
 function handleEnterKey (text) {
-  return state => {
+  return function enterKeyPressed (state) {
     if (state.mode === 'readyToGuess') {
       return makeGuess(text)(state);
     } else if (state.mode === 'madeGuess') {
@@ -128,9 +130,26 @@ function handleEnterKey (text) {
 }
 
 function transitionEnd () {
-  return state => {
+  return function endTransition (state) {
+    if (state.mode !== 'transitioning') {
+      return state;
+    }
     const stateUpdates = {
       mode: 'readyToGuess'
+    };
+
+    return Object.assign(
+      {},
+      state,
+      stateUpdates
+    );
+  };
+}
+
+function updateGuessInput (text) {
+  return function updateGuessInputValue (state) {
+    const stateUpdates = {
+      guessInputValue: text
     };
 
     return Object.assign(
@@ -146,7 +165,8 @@ function actions ({guessButton$, guessText$, nextFlashcard$, enterKey$, transiti
     guessButton$.withLatestFrom(guessText$, (_, text) => makeGuess(text)),
     nextFlashcard$.map(nextFlashcard),
     enterKey$.withLatestFrom(guessText$, (_, text) => handleEnterKey(text)),
-    transitionEnd$.map(transitionEnd)
+    transitionEnd$.map(transitionEnd),
+    guessText$.map(updateGuessInput)
   );
 }
 

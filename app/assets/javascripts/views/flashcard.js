@@ -1,6 +1,9 @@
 const {h} = require('@cycle/dom');
 const FocusHook = require('virtual-dom/virtual-hyperscript/hooks/focus-hook');
 
+const Color = require('color');
+const natural = require('natural');
+
 function guessMessage (score) {
   if (score === 5) {
     return 'Perfect!';
@@ -19,26 +22,49 @@ function displayIf (bool) {
   return {style: `display: ${bool ? 'inline-block' : 'none'}`};
 }
 
-function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessResult, guessScore, buttonClicked=false) {
+function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessScore, nameColor, buttonClicked=false) {
   return (
-    h('.more-info', {attributes: displayIf(showMoreInformation)}, [
-      h('.name', staffMember.name),
-      h('h3', staffMember.position),
-      h(`h2.score-${guessScore}`, guessMessage(guessScore)),
-      h(`button.proceed ${buttonClicked ? '.clicked' : ''}`, 'Next')
-    ])
+      h('.more-info', {attributes: displayIf(showMoreInformation)}, [
+        h('div', [
+          h('h2.staff-member-name', {style: {color: nameColor}}, staffMember.name),
+          h('h3.staff-member-position', staffMember.position),
+        ]),
+
+        h(`.score-${guessScore.score}`, guessMessage(guessScore.score)),
+        h(`button.proceed ${buttonClicked ? '.clicked' : ''}`, 'Next')
+      ])
   );
 }
 
-function renderFlashcard (flashcard, index, showMoreInformation, guessResult, guessScore, guessValue) {
+function renderFlashcard (flashcard, index, showMoreInformation, guessScore, guessValue) {
+
   let guessInputProperties = {type: 'text', value: guessValue};
 
-  if (index == 1) {
+  let nameColor = 'black';
+
+  if (index < 2) {
+    let score = natural.JaroWinklerDistance(guessValue || '', flashcard.staff_member.name);
+
+    if (guessScore.flashcard.staff_member.name === flashcard.staff_member.name) {
+      score = guessScore.distance;
+    }
+
+    nameColor = Color('#FA0E6A').darken(1 - score).hslString();
+
     guessInputProperties['focus-hook'] = new FocusHook();
+    guessInputProperties.style = {
+      color: nameColor
+    }
   }
   return (
     h(`.flashcard.position-${index}`, {key: flashcard.id}, [
-      h('img', {attributes: {src: flashcard.staff_member.image_url}}),
+      h('div.staff-info', [
+        h('div', [
+          h('img', {attributes: {src: flashcard.staff_member.image_url }}),
+        ]),
+
+        displayMoreInfoIfGuessed(flashcard.staff_member, showMoreInformation, guessScore, nameColor, index === 0),
+      ]),
 
       h('div', {attributes: displayIf(!showMoreInformation)}, [
         h('div', [
@@ -50,7 +76,6 @@ function renderFlashcard (flashcard, index, showMoreInformation, guessResult, gu
         ])
       ]),
 
-      displayMoreInfoIfGuessed(flashcard.staff_member, showMoreInformation, guessResult, guessScore, index === 0)
     ])
   );
 }
