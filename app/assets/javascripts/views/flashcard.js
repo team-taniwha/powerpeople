@@ -24,15 +24,15 @@ function displayIf (bool) {
 
 function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessScore, nameColor, buttonClicked=false) {
   return (
-      h('.more-info', {attributes: displayIf(showMoreInformation)}, [
-        h('div', [
-          h('h2.staff-member-name', {style: {color: nameColor}}, staffMember.name),
-          h('h3.staff-member-position', staffMember.position),
-        ]),
+    h('.more-info', {attributes: displayIf(showMoreInformation)}, [
+      h('div', [
+        h('h2.staff-member-name', {style: {color: nameColor}}, staffMember.name),
+        h('h3.staff-member-position', staffMember.position),
+      ]),
 
-        h(`.score-${guessScore.score}`, guessMessage(guessScore.score)),
-        h(`button.proceed ${buttonClicked ? '.clicked' : ''}`, 'Next')
-      ])
+      h(`.score-${guessScore.score}`, guessMessage(guessScore.score)),
+      h(`button.proceed ${buttonClicked ? '.clicked' : ''}`, 'Next')
+    ])
   );
 }
 
@@ -58,17 +58,17 @@ function renderFlashcard (flashcard, index, showMoreInformation, guessScore, gue
   }
   return (
     h(`.flashcard.position-${index}`, {key: flashcard.id}, [
-      renderNewBadge(flashcard),
 
       h('div.staff-info', [
         h('div', [
+          renderNewBadge(flashcard),
           h('img', {attributes: {src: flashcard.staff_member.image_url }}),
         ]),
 
         displayMoreInfoIfGuessed(flashcard.staff_member, showMoreInformation, guessScore, nameColor, index === 0),
       ]),
 
-      h('div', {attributes: displayIf(!showMoreInformation)}, [
+      h('.guess-input-container', {attributes: displayIf(!showMoreInformation)}, [
         h('div', [
           h('input.guess.name', guessInputProperties)
         ]),
