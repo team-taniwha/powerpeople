@@ -10,6 +10,15 @@ body {
   background: #EFEFEF;
 }
 
+.title {
+  margin: 0 auto;
+  padding: 4px 0px;
+  height: 40px;
+  width: 240px;
+  background: image-url("power_people_white.png") 0 center no-repeat;
+  background-size: 250px 76px;
+}
+
 .flashcard {
   transition: all 800ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
