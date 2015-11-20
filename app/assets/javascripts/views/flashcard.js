@@ -91,14 +91,16 @@ function renderNewBadge(flashcard) {
     attributes: {
       direction: 'down',
       behavior: 'alternate',
-      scrolldelay: '50',
+      scrolldelay: '8',
+      scrollamount: '1',
       truespeed: true
     }
   }, [
     h('marquee', {
       attributes: {
         behavior: 'alternate',
-        scrolldelay: '40',
+        scrolldelay: '6',
+        scrollamount: '1',
         truespeed: true
       }
     }, [
