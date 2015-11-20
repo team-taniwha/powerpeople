@@ -83,32 +83,32 @@ function renderFlashcard (flashcard, index, showMoreInformation, guessScore, gue
 }
 
 function renderNewBadge(flashcard) {
-  if (flashcard.staff_member['joined_powershop_recently?']) {
-    return h('marquee.new-badge', {
+  if (!flashcard.staff_member['joined_powershop_recently?']) {
+    return null
+  }
+
+  return h('marquee.new-badge', {
+    attributes: {
+      direction: 'down',
+      behavior: 'alternate',
+      scrolldelay: '50',
+      truespeed: true
+    }
+  }, [
+    h('marquee', {
       attributes: {
-        direction: 'down',
         behavior: 'alternate',
-        scrolldelay: '50',
+        scrolldelay: '40',
         truespeed: true
       }
     }, [
-      h('marquee', {
+      h('img', {
         attributes: {
-          behavior: 'alternate',
-          scrolldelay: '40',
-          truespeed: true
+          src: "/assets/new"
         }
-      }, [
-        h('img', {
-          attributes: {
-            src: "/assets/new"
-          }
-        })
-      ])
-    ]);
-  } else {
-    return undefined;
-  }
+      })
+    ])
+  ]);
 }
 
 module.exports = renderFlashcard;
