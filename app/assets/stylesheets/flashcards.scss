@@ -39,10 +39,6 @@ body {
   z-index: -1;
 }
 
-.staff-info {
-  margin-bottom: 50px;
-}
-
 .staff-position {
   color: $grey;
 }
@@ -75,11 +71,13 @@ body {
 
     h2.staff-member-name {
       margin: 0;
+      margin-top: 8px;
+      font-size: 2em;
     }
 
     h3.staff-member-position {
       margin: 0;
-      font-size: 1em; 
+      font-size: 1em;
       color: $grey;
     }
   }

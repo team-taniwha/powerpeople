@@ -25,9 +25,9 @@ function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessResult
         h('div', [
           h('h2.staff-member-name', staffMember.name),
           h('h3.staff-member-position', staffMember.position),
-        ]), 
+        ]),
 
-        // h('.score-${guessScore}', guessMessage(guessScore)),
+        h(`.score-${guessScore}`, guessMessage(guessScore)),
         h(`button.proceed ${buttonClicked ? '.clicked' : ''}`, 'Next')
       ])
   );
