@@ -203,6 +203,18 @@ button:active {
 
 }
 
+.new-badge {
+  width: 240px;
+  height: 230px;
+  margin-bottom: -235px;
+
+  img {
+    width: 60px;
+    height: 60px;
+    opacity: 0.75;
+  }
+}
+
 @-moz-keyframes fancy {
 
   from {
@@ -221,5 +233,4 @@ button:active {
     -moz-transform: translate3d(0px, 0px, 0px);
     font-size: 100%;
   }
-
 }
