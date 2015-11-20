@@ -29,7 +29,8 @@ header {
 }
 
 html {
-  font-family: omnes-pro, Helvetica;
+  font-family: 'Lato', Helvetica;
+  font-weight: 33300;
   min-height: 100%;
 }
 

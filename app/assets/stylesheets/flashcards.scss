@@ -214,3 +214,23 @@ button:active {
     opacity: 0.75;
   }
 }
+
+@-moz-keyframes fancy {
+
+  from {
+    -moz-transform: translate3d(0px, 0px, 0px);
+    font-size: 100%;
+    animation-timing-function: ease-in;
+  }
+
+  50% {
+    transform: translate3d(0px, -10px, 0px);
+    font-size: 150%;
+    animation-timing-function: ease-out;
+  }
+
+  to {
+    -moz-transform: translate3d(0px, 0px, 0px);
+    font-size: 100%;
+  }
+}
