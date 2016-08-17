@@ -11,8 +11,8 @@ module People
     config.browserify_rails.commandline_options = "-t babelify"
 
     SimpleGoogleAuth.configure do |config|
-      config.client_id = ENV['PEOPLE_CLIENT_ID']
-      config.client_secret = ENV['PEOPLE_CLIENT_SECRET']
+      config.client_id = ENV.fetch('PEOPLE_CLIENT_ID')
+      config.client_secret = ENV.fetch('PEOPLE_CLIENT_SECRET')
       config.redirect_uri = "https://powershop-people.herokuapp.com/google-callback"
       config.authenticate = lambda do |data|
         data.email.ends_with?("@powershop.co.nz")
