@@ -1,6 +1,20 @@
 require 'pp'
 require 'httparty'
 
+MASTERTON = "Masterton"
+HANSON = "Wgtn - Hanson st"
+TORY = "Wgtn - Tory st"
+MELBOURNE = "Melbourne"
+BIRMINGHAM = "Birmingham"
+
+CITIES = [
+  MASTERTON,
+  HANSON,
+  TORY,
+  MELBOURNE,
+  BIRMINGHAM
+]
+
 class GetPeopleFromWinkyworld
   include HTTParty
 
@@ -32,7 +46,7 @@ class GetPeopleFromWinkyworld
     JSON.parse(self.class.get(people_url).body)
       .map { |person| Staff.from_json(person) }
       .select(&:has_profile_picture?)
-      .select(&:in_wellington?)
+      .select(&:works_at_hanson_st?)
   end
 
   private
@@ -71,7 +85,8 @@ class Staff
     !@image_url.include? "default"
   end
 
-  def in_wellington?
-    @city == "Wellington"
+  # TODO - support more than just HANSON
+  def works_at_hanson_st?
+    @city == HANSON
   end
 end
