@@ -30,18 +30,6 @@ class GetPeopleFromWinkyworld
 
   private
 
-  def update_or_create_staff_member(person)
-    existing_staff_member = StaffMember.find_by(name: person.name)
-    staff_member = StaffMember.find_or_initialize_by(name: person.name)
-
-    staff_member.update_attributes!(
-      :bio => person.bio,
-      :image_url => person.image_url,
-      :position => person.position,
-      :city => person.city
-    )
-  end
-
   def people_with_pictures_in_wellington
     JSON.parse(self.class.get(people_url).body)
       .map { |person| Staff.from_json(person) }
