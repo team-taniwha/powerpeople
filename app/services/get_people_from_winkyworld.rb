@@ -51,6 +51,7 @@ end
 class Staff
   def self.from_json(json)
     new(
+      winkyworld_id: json["id"],
       name: json["attributes"]["Name"],
       image_url: json["avatar_large"],
       position: json["attributes"]["Position"],
@@ -59,9 +60,10 @@ class Staff
     )
   end
 
-  attr_reader :name, :image_url, :position, :bio, :city
+  attr_reader :name, :image_url, :position, :bio, :city, :winkyworld_id
 
-  def initialize(name:, image_url:, position:, bio:, city:)
+  def initialize(name:, image_url:, position:, bio:, city:, winkyworld_id:)
+    @winkyworld_id = winkyworld_id
     @name = name
     @image_url = image_url
     @position = position

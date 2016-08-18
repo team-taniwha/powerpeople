@@ -2,11 +2,11 @@ class FlashcardsController < ApplicationController
   def index
     response.headers.delete "X-Frame-Options"
 
-    if current_user.flashcards.count < StaffMember.count
+    if current_user.flashcards.employed_flashcards.count < StaffMember.employed.count
       MakeFlashcards.for(current_user).call
     end
 
-    @flashcards = current_user.flashcards
+    @flashcards = current_user.flashcards.employed_flashcards
       .sort_by { |flashcard| flashcard.due || Time.new(0) }
   end
 

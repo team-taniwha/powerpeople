@@ -1,27 +1,5 @@
 <script>
-  var introCard = {
-    id: 'notReal',
-    staff_member: {
-      name: 'Welcome to PowerPeople',
-      position: 'Press enter to start',
-      bio: '...',
-      image_url: '/assets/winky.png'
-    }
-  }
-
-  var introCard2 = {
-    id: 'alsoNotReal',
-    staff_member: {
-      name: 'Welcome to PowerPeople',
-      position: 'Press enter to start',
-      bio: '',
-      image_url: '/assets/winky.png'
-    }
-  }
-
-  var introCards = [introCard, introCard2];
-
-  var serverFlashcards = <%= raw(@flashcards.to_json(include: { staff_member: { methods: :joined_powershop_recently? }})) %>;
+  var serverFlashcards = <%= raw(@flashcards.to_json(include: { staff_member: { methods: [:joined_powershop_recently?, :first_name] }})) %>;
 
   window.flashcards = serverFlashcards;
   window.authenticity_token = "<%= form_authenticity_token %>";
