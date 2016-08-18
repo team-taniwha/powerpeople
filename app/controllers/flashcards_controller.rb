@@ -19,7 +19,7 @@ class FlashcardsController < ApplicationController
       flashcard.update_attributes!(:due => Date.tomorrow)
     end
 
-    redirect_to :action => :index
+    render json: flashcard
   end
 
   def sign_in

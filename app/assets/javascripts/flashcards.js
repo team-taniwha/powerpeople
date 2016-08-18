@@ -38,12 +38,13 @@ function dirtySideEffects () {
 function makeGuessRequest (guess) {
   return {
     url: '/flashcards/' + guess.flashcard.id,
-    method: 'PUT',
+    method: 'POST',
     type: 'application/json',
     send: {
-      recollection_quality: guess.score,
-      _method: 'PUT',
-      authenticity_token: global.authenticity_token
+      recollection_quality: guess.score
+      },
+    headers: {
+      'X-CSRF-Token': global.authenticity_token
     }
   };
 }
