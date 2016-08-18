@@ -6,4 +6,8 @@ class StaffMember < ActiveRecord::Base
   def joined_powershop_recently?
     created_at  > Date.today.prev_month
   end
+
+  def first_name
+    name.split.first
+  end
 end

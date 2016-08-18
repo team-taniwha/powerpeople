@@ -19,7 +19,7 @@ function view (state) {
           flashcard,
           index,
           state.mode === 'madeGuess' || index === 0,
-          _.last(state.guesses) || {score: 0, distance: 1000, flashcard: {staff_member: {name: ''}}},
+          _.last(state.guesses) || {score: 0, distance: 1000, flashcard: {staff_member: {first_name: ''}}},
           state.guessInputValue
         ))
       )
@@ -78,9 +78,9 @@ function makeGuess (guessText) {
 
     const newGuess = {
       name: guessText,
-      score: calculateGuessScore(flashcard.staff_member.name, guessText),
+      score: calculateGuessScore(flashcard.staff_member.first_name, guessText),
       flashcard,
-      distance: natural.JaroWinklerDistance(flashcard.staff_member.name, guessText)
+      distance: natural.JaroWinklerDistance(flashcard.staff_member.first_name, guessText)
     };
 
     const stateUpdates = {

@@ -10,11 +10,11 @@ function guessMessage (score) {
   } else if (score === 4) {
     return 'Very close!';
   } else if (score === 3) {
-    return 'Almost...';
+    return 'Almost!';
   } else if (score === 2) {
-    return 'Not quite...';
+    return 'Not quite!';
   } else if (score === 1) {
-    return 'Long way off.';
+    return 'Go say hello!';
   }
 }
 
@@ -26,7 +26,7 @@ function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessScore,
   return (
     h('.more-info', {attributes: displayIf(showMoreInformation)}, [
       h('div', [
-        h('h2.staff-member-name', {style: {color: nameColor}}, staffMember.name),
+        h('h2.staff-member-name', {style: {color: nameColor}}, staffMember.first_name),
         h('h3.staff-member-position', staffMember.position),
       ]),
 
@@ -43,9 +43,9 @@ function renderFlashcard (flashcard, index, showMoreInformation, guessScore, gue
   let nameColor = 'black';
 
   if (index < 2) {
-    let score = natural.JaroWinklerDistance(guessValue || '', flashcard.staff_member.name);
+    let score = natural.JaroWinklerDistance(guessValue || '', flashcard.staff_member.first_name);
 
-    if (guessScore.flashcard.staff_member.name === flashcard.staff_member.name) {
+    if (guessScore.flashcard.staff_member.first_name === flashcard.staff_member.first_name) {
       score = guessScore.distance;
     }
 
