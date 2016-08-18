@@ -16,7 +16,7 @@ class MakeFlashcards
   private
 
   def staff_members_to_make_flashcards_for
-    staff_ids = StaffMember.pluck(:id)
+    staff_ids = StaffMember.employed.pluck(:id)
     existing_flashcard_staff_ids = @user.flashcards.pluck(:staff_member_id)
     missing_staff_member_ids = staff_ids - existing_flashcard_staff_ids
 
