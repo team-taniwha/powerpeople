@@ -36,8 +36,17 @@ function displayMoreInfoIfGuessed (staffMember, showMoreInformation, guessScore,
   );
 }
 
-function renderFlashcard (flashcard, index, showMoreInformation, guessScore, guessValue) {
+function renderNewBanner (flashcard) {
+  if (!flashcard.staff_member['joined_powershop_recently?']) {
+    return null;
+  }
 
+  return (
+    h('div.new-banner', 'New Staff Member!')
+  );
+}
+
+function renderFlashcard (flashcard, index, showMoreInformation, guessScore, guessValue) {
   let guessInputProperties = {type: 'text', value: guessValue};
 
   let nameColor = 'black';
@@ -56,16 +65,24 @@ function renderFlashcard (flashcard, index, showMoreInformation, guessScore, gue
       color: nameColor
     }
   }
+
   return (
     h(`.flashcard.position-${index}`, {key: flashcard.id}, [
 
       h('div.staff-info', [
         h('div', [
-          renderNewBadge(flashcard),
-          h('img', {attributes: {src: flashcard.staff_member.image_url }}),
+          h('img', {attributes: {src: flashcard.staff_member.image_url}})
         ]),
 
-        displayMoreInfoIfGuessed(flashcard.staff_member, showMoreInformation, guessScore, nameColor, index === 0),
+        renderNewBanner(flashcard),
+
+        displayMoreInfoIfGuessed(
+          flashcard.staff_member,
+          showMoreInformation,
+          guessScore,
+          nameColor,
+          index === 0
+        )
       ]),
 
       h('.guess-input-container', {attributes: displayIf(!showMoreInformation)}, [
@@ -76,41 +93,9 @@ function renderFlashcard (flashcard, index, showMoreInformation, guessScore, gue
         h('div', [
           h('button.makeGuess', 'Guess')
         ])
-      ]),
-
+      ])
     ])
   );
-}
-
-function renderNewBadge(flashcard) {
-  if (!flashcard.staff_member['joined_powershop_recently?']) {
-    return null
-  }
-
-  return h('marquee.new-badge', {
-    attributes: {
-      direction: 'down',
-      behavior: 'alternate',
-      scrolldelay: '8',
-      scrollamount: '1',
-      truespeed: true
-    }
-  }, [
-    h('marquee', {
-      attributes: {
-        behavior: 'alternate',
-        scrolldelay: '6',
-        scrollamount: '1',
-        truespeed: true
-      }
-    }, [
-      h('img.new-staff-member', {
-        attributes: {
-          src: window.newStaffMemberImagePath
-        }
-      })
-    ])
-  ]);
 }
 
 module.exports = renderFlashcard;

@@ -205,15 +205,29 @@ button:active {
 }
 
 .new-badge {
-  width: 240px;
-  height: 230px;
-  margin-bottom: -235px;
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 100vw;
+  height: 100vh;
 
   img {
     width: 60px;
     height: 60px;
     opacity: 0.75;
   }
+}
+
+.new-banner {
+  background-color: $pink;
+  color: $white;
+  border: solid;
+  border-width: thin;
+  margin: 0px;
+  width: 80%;
+  display: inline-block;
+  font-weight: 600;
 }
 
 @-moz-keyframes fancy {

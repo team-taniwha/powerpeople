@@ -42,7 +42,7 @@ function makeGuessRequest (guess) {
     type: 'application/json',
     send: {
       recollection_quality: guess.score
-      },
+    },
     headers: {
       'X-CSRF-Token': global.authenticity_token
     }
